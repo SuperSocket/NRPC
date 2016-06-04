@@ -3,11 +3,12 @@
   "buildOptions": {
     "emitEntryPoint": false
   },
-  "dependencies": {
-  },
   "frameworks": {
-      "netstandard1.0": {
-        
+      "netstandard1.1": {
+        "dependencies": {
+          "System.Threading.Tasks": "4.0.11-rc2-*",
+          "Microsoft.Extensions.DependencyInjection": "1.0.0-rc2-*"
+        }
       }
   }
 }
