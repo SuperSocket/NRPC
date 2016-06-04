@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using NRPC.Base;
 using NRPC.Client;
 using Xunit;
 
@@ -14,9 +15,6 @@ namespace NRPC.Test
             var request = new InvokeRequest();
             request.MethodName = "Test";
             request.Arguments = new object[] { 1, "3", 5.5 };
-
-            
-            Console.WriteLine(Convert.ToBase64String(memorySteam.ToArray()));
         }
     }
 }
