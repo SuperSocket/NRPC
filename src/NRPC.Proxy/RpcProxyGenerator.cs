@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace NRPC.Proxy
 {
-    public static class RpcProxyGenerator
+    static class RpcProxyGenerator
     {        
         internal static object CreateProxyInstance(Type baseType, Type interfaceType)
         {
@@ -16,14 +16,9 @@ namespace NRPC.Proxy
             return Activator.CreateInstance(type);
         }
         
-        public static Task Invoke<T>(IRpcProxy proxy, MethodInfo targetMethod, object[] args)
-        {
-            return proxy.Invoke<T>(targetMethod, args);
-        }
-        
         private static Dictionary<string, MethodInfo> m_MethodInfoLibs = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
         
-        public static MethodInfo GetMethodInfo(string name)
+        internal static MethodInfo GetMethodInfo(string name)
         {
             lock (m_MethodInfoLibs)
             {
@@ -39,7 +34,7 @@ namespace NRPC.Proxy
             }
         }
         
-        private static void EmitMethod(TypeBuilder typeBuilder, MethodInfo method)
+        private static Type GetReturnElementType(MethodInfo method)
         {
             var returnType = method.ReturnType.GetTypeInfo();
                 
@@ -55,6 +50,38 @@ namespace NRPC.Proxy
                 Debug.WriteLine($"ReturnType is not allowed: {returnType}");
                 throw new Exception("Only task base return type is supported.");
             }
+            
+            return returnElementType;
+        }
+        
+        private static void PutArgumentsToArray(ILGenerator il, Type[] paramTypes, LocalBuilder argsLabel)
+        {
+            il.Emit(OpCodes.Nop);
+            
+            il.Emit(OpCodes.Ldc_I4, paramTypes.Length);
+            il.Emit(OpCodes.Newarr, typeof(object));
+            il.Emit(OpCodes.Stloc, argsLabel);
+
+            for (int i = 0; i < paramTypes.Length; i++)
+            {
+                var paramType = paramTypes[i];
+                
+                il.Emit(OpCodes.Ldloc, argsLabel);
+                il.Emit(OpCodes.Ldc_I4, i);
+                il.Emit(OpCodes.Ldarg, i + 1);
+                
+                if (paramType.GetTypeInfo().IsValueType)
+                {
+                    il.Emit(OpCodes.Box, paramType);
+                }
+                
+                il.Emit(OpCodes.Stelem_Ref);
+            }
+        }
+        
+        private static void EmitMethod(TypeBuilder typeBuilder, MethodInfo method)
+        {
+            var returnElementType = GetReturnElementType(method);
             
             RegisterMethodInfo(method.Name, method);
             
@@ -72,56 +99,42 @@ namespace NRPC.Proxy
             
             var methodInfoLabel = il.DeclareLocal(typeof(MethodInfo));
             var argsLabel = il.DeclareLocal(typeof(object[]));
+            var interfaceInstanceLabel = il.DeclareLocal(typeof(IRpcProxy));
             
-            il.Emit(OpCodes.Nop);
+            PutArgumentsToArray(il, paramTypes, argsLabel);
             
-            var getMethodMethod = typeof(RpcProxyGenerator).GetTypeInfo().GetDeclaredMethod("GetMethodInfo");
+            var rpcProxyInterfaceType = typeof(IRpcProxy).GetTypeInfo();
             
-            il.Emit(OpCodes.Ldstr, method.Name);
-            il.Emit(OpCodes.Call, getMethodMethod);
-            il.Emit(OpCodes.Stloc, methodInfoLabel);
-
-            var invokeMethod = typeof(RpcProxyGenerator).GetTypeInfo().GetDeclaredMethod("Invoke");
+            var getMethodInfoMethod = rpcProxyInterfaceType.GetDeclaredMethod("GetMethodInfo");
+            
+            var invokeMethod = rpcProxyInterfaceType.GetDeclaredMethod("Invoke");
             invokeMethod = invokeMethod.MakeGenericMethod(returnElementType);
             
-            il.Emit(OpCodes.Ldc_I4, paramTypes.Length);
-            il.Emit(OpCodes.Newarr, typeof(object));
-            il.Emit(OpCodes.Stloc, argsLabel);
-            //il.Emit(OpCodes.Ldloc, argsLabel);
-            //il.Emit(OpCodes.Call, typeof(Console).GetRuntimeMethod("WriteLine", new Type[] { typeof(object) }));
-            
-
-            for (int i = 0; i < paramTypes.Length; i++)
-            {
-                var paramType = paramTypes[i];
-                
-                il.Emit(OpCodes.Ldloc, argsLabel);
-                il.Emit(OpCodes.Ldc_I4, i);
-                il.Emit(OpCodes.Ldarg, i + 1);
-                
-                if (paramType.GetTypeInfo().IsValueType)
-                {
-                    il.Emit(OpCodes.Box, paramType);
-                }
-                
-                il.Emit(OpCodes.Stelem_Ref);
-            }
-            
-            //il.Emit(OpCodes.Ldstr, "{0},{1},{2}");
+            // this
             il.Emit(OpCodes.Ldarg_0);
-            //il.Emit(OpCodes.Call, typeof(Console).GetRuntimeMethod("WriteLine", new Type[] { typeof(object) }));
-            il.Emit(OpCodes.Ldloc_0);
-            //il.Emit(OpCodes.Call, typeof(Console).GetRuntimeMethod("WriteLine", new Type[] { typeof(object) }));
-            il.Emit(OpCodes.Ldloc_1);
-            //il.Emit(OpCodes.Call, typeof(Console).GetRuntimeMethod("WriteLine", new Type[] { typeof(object) }));
+            // as IRpxProxy
+            il.Emit(OpCodes.Castclass, typeof(IRpcProxy));
+            il.Emit(OpCodes.Stloc, interfaceInstanceLabel);
             
-            //Console.WriteLine(invokeMethod);
+            // ((IRpxProxy)this).GetMethod(name)
+            il.Emit(OpCodes.Ldloc, interfaceInstanceLabel);
+            il.Emit(OpCodes.Ldstr, method.Name);
+            il.Emit(OpCodes.Callvirt, getMethodInfoMethod);
+            il.Emit(OpCodes.Stloc, methodInfoLabel);
             
-            //il.Emit(OpCodes.Call, typeof(Console).GetRuntimeMethod("WriteLine", new Type[] { typeof(string), typeof(object), typeof(object), typeof(object) }));
-            il.Emit(OpCodes.Call, invokeMethod);
-            //il.Emit(OpCodes.Call, typeof(Console).GetRuntimeMethod("WriteLine", new Type[] { typeof(object) }));
+            // (IRpxProxy)this
+            il.Emit(OpCodes.Ldloc, interfaceInstanceLabel);
+
+            // load methodInfo
+            il.Emit(OpCodes.Ldloc, methodInfoLabel);
+ 
+            // load args
+            il.Emit(OpCodes.Ldloc, argsLabel);
+
+            // invoke
+            il.Emit(OpCodes.Callvirt, invokeMethod);
             
-            //il.Emit(OpCodes.Ldstr, "SumResult");
+            // return result
             il.Emit(OpCodes.Ret);
             
             typeBuilder.DefineMethodOverride(mdb, method);
