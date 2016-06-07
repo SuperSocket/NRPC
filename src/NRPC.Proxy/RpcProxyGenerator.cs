@@ -16,21 +16,20 @@ namespace NRPC.Proxy
             return Activator.CreateInstance(type);
         }
         
-        private static Dictionary<string, MethodInfo> m_MethodInfoLibs = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
+        private static List<MethodInfo> m_MethodInfoLibs = new List<MethodInfo>();
         
-        internal static MethodInfo GetMethodInfo(string name)
+        internal static MethodInfo GetMethodInfo(int index)
         {
-            lock (m_MethodInfoLibs)
-            {
-                return m_MethodInfoLibs[name];
-            }
+            return m_MethodInfoLibs[index];
         }
         
-        private static void RegisterMethodInfo(string name, MethodInfo method)
+        private static int RegisterMethodInfo(MethodInfo method)
         {
             lock (m_MethodInfoLibs)
             {
-                m_MethodInfoLibs.Add(name, method);
+                var count = m_MethodInfoLibs.Count;
+                m_MethodInfoLibs.Add(method);
+                return count;
             }
         }
         
@@ -83,7 +82,7 @@ namespace NRPC.Proxy
         {
             var returnElementType = GetReturnElementType(method);
             
-            RegisterMethodInfo(method.Name, method);
+            var methodIndex = RegisterMethodInfo(method);
             
             var paramTypes = method.GetParameters()
                 .Where(p => !p.IsOut)
@@ -122,7 +121,7 @@ namespace NRPC.Proxy
             
             // ((IRpxProxy)this).GetMethod(name)
             il.Emit(OpCodes.Ldloc, interfaceInstanceLabel);
-            il.Emit(OpCodes.Ldstr, method.Name);
+            il.Emit(OpCodes.Ldc_I4, methodIndex);
             il.Emit(OpCodes.Callvirt, getMethodInfoMethod);
             il.Emit(OpCodes.Stloc, methodInfoLabel);
             
@@ -164,7 +163,10 @@ namespace NRPC.Proxy
 
             foreach (var method in interfaceType.GetRuntimeMethods())
             {
-                EmitMethod(tb, method);
+                lock (m_MethodInfoLibs)
+                {
+                    EmitMethod(tb, method);
+                }
             }
             
             return tb.CreateTypeInfo().AsType();

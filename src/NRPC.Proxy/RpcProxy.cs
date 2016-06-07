@@ -7,7 +7,7 @@ namespace NRPC.Proxy
     {
         Task Invoke<T>(MethodInfo targetMethod, object[] args);
         
-        MethodInfo GetMethodInfo(string name);
+        MethodInfo GetMethodInfo(int index);
     }
     
     public abstract class RpcProxy : IRpcProxy
@@ -17,9 +17,9 @@ namespace NRPC.Proxy
             return Invoke<T>(targetMethod, args);
         }
         
-        MethodInfo IRpcProxy.GetMethodInfo(string name)
+        MethodInfo IRpcProxy.GetMethodInfo(int index)
         {
-            return RpcProxyGenerator.GetMethodInfo(name);
+            return RpcProxyGenerator.GetMethodInfo(index);
         }
         
         protected abstract Task Invoke<T>(MethodInfo targetMethod, object[] args);
