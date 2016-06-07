@@ -4,10 +4,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NRPC.Base;
+using NRPC.Proxy;
 
 namespace NRPC.Client
 {
-    public abstract class ClientDispatchProxy : DispatchProxy, IRpcDispatchProxy
+    public abstract class ClientDispatchProxy : RpcProxy, IRpcDispatchProxy
     {
         protected IServiceProvider ServiceProvider { get; private set; }
         
@@ -17,16 +18,10 @@ namespace NRPC.Client
         
         private IInvokeRepository m_InvokeRepository;
         
-        private static readonly TypeInfo s_TaskType;
-        
-        private static MethodInfo s_InvokeAsyncMethod;
-        private static MethodInfo s_InvokeSyncMethod;
         
         static ClientDispatchProxy()
         {
-            s_TaskType = typeof(Task).GetTypeInfo();
-            s_InvokeAsyncMethod = typeof(ClientDispatchProxy).GetTypeInfo().GetDeclaredMethod("InvokeAsync");
-            s_InvokeSyncMethod = typeof(ClientDispatchProxy).GetTypeInfo().GetDeclaredMethod("InvokeSync");
+            
         }
         
         public ClientDispatchProxy(IServiceProvider serviceProvider)
@@ -54,12 +49,7 @@ namespace NRPC.Client
                 invokeState.ResultHandle.BeginInvoke(result.Result, null, null);
             }
         }
-        
-        private async Task<T> InvokeAsync<T>(MethodInfo targetMethod, object[] args)
-        {
-            var taskCompletionSrc = CreateInvokeTaskSrc<T>(targetMethod, args);
-            return await taskCompletionSrc.Task;
-        }
+
         
         private TaskCompletionSource<T> CreateInvokeTaskSrc<T>(MethodInfo targetMethod, object[] args)
         {
@@ -96,41 +86,18 @@ namespace NRPC.Client
                     TimeToTimeOut = DateTime.Now.AddMinutes(5),
                     ResultHandle = (r) =>
                     {
-                        taskCompletionSrc.SetResult(m_RpcCodec.DecodeResult<T>(r));
+                        if (typeof(T) == typeof(object))
+                            taskCompletionSrc.SetResult(default(T));
+                        else
+                            taskCompletionSrc.SetResult(m_RpcCodec.DecodeResult<T>(r));
                     }
                 });
         }
-
         
-        private T InvokeSync<T>(MethodInfo targetMethod, object[] args)
+        protected override Task Invoke<T>(MethodInfo targetMethod, object[] args)
         {
             var taskCompletionSrc = CreateInvokeTaskSrc<T>(targetMethod, args);
-            var task = taskCompletionSrc.Task;
-            task.Wait();
-            return task.Result;
-        }
-        
-        protected override object Invoke(MethodInfo targetMethod, object[] args)
-        {
-            System.Type resultType = null;
-            
-            MethodInfo invokeMethod;
-
-            // return a task
-            if (s_TaskType.IsAssignableFrom(targetMethod.ReturnType.GetTypeInfo()))
-            {
-                if (targetMethod.ReturnType.GenericTypeArguments != null)
-                    resultType = targetMethod.ReturnType.GenericTypeArguments.FirstOrDefault();
-                
-                invokeMethod = s_InvokeAsyncMethod;
-            }
-            else
-            {
-                resultType = targetMethod.ReturnType;
-                invokeMethod = s_InvokeSyncMethod;
-            }
-            
-            return invokeMethod.MakeGenericMethod(resultType).Invoke(this, new object[] { targetMethod, args });
+            return taskCompletionSrc.Task;
         }
 
         T IRpcDispatchProxy.CreateClient<T>()
@@ -151,7 +118,7 @@ namespace NRPC.Client
         }
         protected override T CreateClient<T>()
         {
-            return DispatchProxy.Create<T, TDispatchProxy>();
+            return RpcProxy.Create<T, TDispatchProxy>();
         }
     }
 }

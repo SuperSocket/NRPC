@@ -9,7 +9,7 @@
   "frameworks": {
     "netstandard1.3": {
       "dependencies": {
-        "System.Reflection.DispatchProxy": "4.0.1-rc2-*",
+        "NRPC.Proxy": "*",
         "Microsoft.Extensions.DependencyInjection": "1.0.0-rc2-*"
       }
     }

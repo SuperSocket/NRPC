@@ -108,7 +108,11 @@ namespace NRPC.Proxy
             var getMethodInfoMethod = rpcProxyInterfaceType.GetDeclaredMethod("GetMethodInfo");
             
             var invokeMethod = rpcProxyInterfaceType.GetDeclaredMethod("Invoke");
-            invokeMethod = invokeMethod.MakeGenericMethod(returnElementType);
+
+            if (returnElementType == null) // Task only (void)
+                invokeMethod = invokeMethod.MakeGenericMethod(typeof(object));
+            else
+                invokeMethod = invokeMethod.MakeGenericMethod(returnElementType);
             
             // this
             il.Emit(OpCodes.Ldarg_0);
