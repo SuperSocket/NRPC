@@ -72,7 +72,8 @@ namespace NRPC.Client
                 };
                 
             request.Id = Guid.NewGuid().GetHashCode();
-            m_RpcChannel.Send(m_RpcCodec.Encode(request));
+            
+            await m_RpcChannel.SendAsync(m_RpcCodec.Encode(request));
             m_InvokeRepository.RegisterInvokeState(request.Id,
                 new InvokeState
                 {
