@@ -146,7 +146,7 @@ namespace NRPC.Proxy
             var interfaceTypeInfo = interfaceType.GetTypeInfo();
             var taskType = typeof(Task).GetTypeInfo();
             
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("ProxyAssembly"), AssemblyBuilderAccess.Run);
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("NRPC.ProxyAssembly"), AssemblyBuilderAccess.Run);
             
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("ProxyModule");
             

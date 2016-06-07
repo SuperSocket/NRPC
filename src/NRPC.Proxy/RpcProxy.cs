@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace NRPC.Proxy
 {
-    public interface IRpcProxy
+    internal interface IRpcProxy
     {
         Task Invoke<T>(MethodInfo targetMethod, object[] args);
         
