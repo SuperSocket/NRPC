@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": false
+  },
+  "frameworks": {
+      "netstandard1.1": {
+        "dependencies": {
+          "Newtonsoft.Json": "9.0.1-beta1",
+          "NRPC.Base": "*"
+        }
+      }
+  }
+}
