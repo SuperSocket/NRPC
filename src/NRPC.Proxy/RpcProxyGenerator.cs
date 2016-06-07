@@ -9,11 +9,35 @@ using System.Diagnostics;
 namespace NRPC.Proxy
 {
     static class RpcProxyGenerator
-    {        
+    {
+        private static string ComposeProxyTypeName(Type baseType, Type interfaceType)
+        {
+            return baseType.Name + "_" + interfaceType.Name;
+        }
+
+        private static Dictionary<string, Type> m_ProxyTypesCache = new Dictionary<string, Type>();
+
         internal static object CreateProxyInstance(Type baseType, Type interfaceType)
         {
-            var type = GenerateProxyType(baseType, interfaceType);
-            return Activator.CreateInstance(type);
+            return Activator.CreateInstance(GetProxyType(baseType, interfaceType));
+        }
+
+        internal static Type GetProxyType(Type baseType, Type interfaceType)
+        {
+            var proxyTypeName = ComposeProxyTypeName(baseType, interfaceType);
+
+            Type proxyType = null;
+
+            lock (m_ProxyTypesCache)
+            {
+                if(!m_ProxyTypesCache.TryGetValue(proxyTypeName, out proxyType))
+                {
+                    proxyType = GenerateProxyType(baseType, interfaceType, proxyTypeName);
+                    m_ProxyTypesCache.Add(proxyTypeName, proxyType);
+                }
+            };
+
+            return proxyType;
         }
         
         private static List<MethodInfo> m_MethodInfoLibs = new List<MethodInfo>();
@@ -142,8 +166,40 @@ namespace NRPC.Proxy
             
             typeBuilder.DefineMethodOverride(mdb, method);
         }
+
+        private static void EmitConstructors(TypeBuilder typeBuilder, Type baseType)
+        {
+            foreach (var constructor in baseType.GetTypeInfo().DeclaredConstructors)
+            {
+                var parameters = constructor.GetParameters();
                 
-        private static Type GenerateProxyType(Type baseType, Type interfaceType)
+                var constructorBuilder = typeBuilder.DefineConstructor(
+                        MethodAttributes.Public | 
+                        MethodAttributes.SpecialName | 
+                        MethodAttributes.RTSpecialName, 
+                        CallingConventions.Standard, 
+                        parameters.Select(p => p.GetType()).ToArray());
+
+                var il = constructorBuilder.GetILGenerator();
+
+                il.Emit(OpCodes.Nop);
+
+                // this
+                il.Emit(OpCodes.Ldarg_0);
+
+                for(var i = 0; i < parameters.Length; i++)
+                {
+                    il.Emit(OpCodes.Ldarg, i + 1);
+                }
+
+                // base(xx)
+                il.Emit(OpCodes.Call, constructor);
+
+                il.Emit(OpCodes.Ret);
+            }
+        }
+                
+        private static Type GenerateProxyType(Type baseType, Type interfaceType, string proxyTypeName)
         {
             var baseTypeInfo = baseType.GetTypeInfo();
             var interfaceTypeInfo = interfaceType.GetTypeInfo();
@@ -153,12 +209,12 @@ namespace NRPC.Proxy
             
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("ProxyModule");
             
-            var typeName = interfaceType.Name + "Imp";
+            Debug.WriteLine($"TypeName:{proxyTypeName}");
             
-            Debug.WriteLine($"TypeName:{typeName}");
+            var tb = moduleBuilder.DefineType(proxyTypeName, TypeAttributes.Public, baseType);
             
-            var tb = moduleBuilder.DefineType(typeName, TypeAttributes.Public, baseType);
-            
+            EmitConstructors(tb, baseType);
+
             tb.AddInterfaceImplementation(interfaceType);
 
             foreach (var method in interfaceType.GetRuntimeMethods())

@@ -16,6 +16,11 @@ namespace NRPC.Test
     
     public class ProxyTest : RpcProxy
     {
+        public ProxyTest()
+        {
+            Console.WriteLine("Constrcutor invoked");
+        }
+
         protected override Task Invoke<T>(MethodInfo targetMethod, object[] args)
         {
             if (targetMethod.Name == "Add")

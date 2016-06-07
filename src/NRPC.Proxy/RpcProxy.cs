@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -28,6 +29,12 @@ namespace NRPC.Proxy
             where TProxy : RpcProxy
         {
             return (T)RpcProxyGenerator.CreateProxyInstance(typeof(TProxy), typeof(T));
+        }
+
+        public static Type GetPorxyType<T, TProxy>()
+            where TProxy : RpcProxy
+        {
+            return RpcProxyGenerator.GetProxyType(typeof(TProxy), typeof(T));
         }
     }
 }

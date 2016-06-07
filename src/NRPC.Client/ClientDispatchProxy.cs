@@ -105,7 +105,10 @@ namespace NRPC.Client
             return CreateClient<T>();
         }
         
-        protected abstract T CreateClient<T>();
+        protected virtual T CreateClient<T>()
+        {
+            return RpcProxy.Create<T, ClientDispatchProxy>();
+        }
     }
     
     public abstract class ClientDispatchProxy<TDispatchProxy> : ClientDispatchProxy
