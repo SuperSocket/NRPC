@@ -72,8 +72,24 @@ namespace NRPC.Client
                 };
                 
             request.Id = Guid.NewGuid().GetHashCode();
-            
-            await m_RpcChannel.SendAsync(m_RpcCodec.Encode(request));
+
+            SendRequestAsync(taskCompletionSrc, request);
+                
+            return taskCompletionSrc;
+        }
+
+        private async void SendRequestAsync<T>(TaskCompletionSource<T> taskCompletionSrc, InvokeRequest request)
+        {
+            try
+            {
+                await m_RpcChannel.SendAsync(m_RpcCodec.Encode(request));
+            }
+            catch (System.Exception e)
+            {
+                taskCompletionSrc.SetException(e);
+                return;
+            }
+
             m_InvokeRepository.RegisterInvokeState(request.Id,
                 new InvokeState
                 {
@@ -83,9 +99,8 @@ namespace NRPC.Client
                         taskCompletionSrc.SetResult(m_RpcCodec.DecodeResult<T>(r));
                     }
                 });
-                
-            return taskCompletionSrc;
         }
+
         
         private T InvokeSync<T>(MethodInfo targetMethod, object[] args)
         {
