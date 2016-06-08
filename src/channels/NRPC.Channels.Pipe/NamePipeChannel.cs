@@ -1,17 +1,22 @@
 
 using System;
 using System.IO.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using NRPC.Base;
 
 namespace NRPC.Channels.Pipe
 {
-    public abstract class NamePipeChannel : IRpcChannel
+    public abstract class NamePipeChannel : IRpcChannel, IDisposable
     {
         protected NamePipeConfig Config { get; private set; }
 
-        protected virtual PipeStream PipeStream { get; private set; }
+        private PipeStream m_PipeStream;
+        protected virtual PipeStream PipeStream
+        {
+            get { return m_PipeStream; }
+        }
 
         public NamePipeChannel(IOptions<NamePipeConfig> options)
         {
@@ -19,10 +24,12 @@ namespace NRPC.Channels.Pipe
                 throw new ArgumentNullException(nameof(options));
                 
             Config = options.Value;
-            PipeStream = CreatePipeStream(Config);
+            m_PipeStream = CreatePipeStream(Config);
         }
 
         protected abstract PipeStream CreatePipeStream(NamePipeConfig config);
+
+        public abstract Task Start();
 
         public Task<ArraySegment<byte>> ReceiveAsync()
         {
@@ -32,6 +39,16 @@ namespace NRPC.Channels.Pipe
         public Task SendAsync(ArraySegment<byte> data)
         {
             throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            var pipeStream = m_PipeStream;
+
+            if(Interlocked.CompareExchange(ref m_PipeStream, null, pipeStream) == pipeStream)
+            {
+                pipeStream.Dispose();
+            }
         }
     }
 }

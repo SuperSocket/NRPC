@@ -18,7 +18,7 @@ namespace NRPC.Test
     {
         public ProxyTest()
         {
-            Console.WriteLine("Constrcutor invoked");
+            
         }
 
         protected override Task Invoke<T>(MethodInfo targetMethod, object[] args)

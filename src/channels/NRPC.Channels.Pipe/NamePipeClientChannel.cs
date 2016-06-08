@@ -21,6 +21,12 @@ namespace NRPC.Channels.Pipe
                 return base.PipeStream as NamedPipeClientStream;
             }
         }
+
+        public override Task Start()
+        {
+            return PipeStream.ConnectAsync();
+        }
+
         protected override PipeStream CreatePipeStream(NamePipeConfig config)
         {
             return new NamedPipeClientStream(config.ServerName, config.PipeName, PipeDirection.InOut);
