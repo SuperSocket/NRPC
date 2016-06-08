@@ -7,6 +7,8 @@
     "NRPC.Base": "*",
     "NRPC.Client": "*",
     "NRPC.Proxy": "*",
+    "NRPC.Codecs.Json": "*",
+    "NRPC.Channels.Pipe": "*",
     "System.Reflection.DispatchProxy": "4.0.1-rc2-*",
     "dotnet-test-xunit": "1.0.0-*",
     "xunit": "2.1.0",

@@ -1,6 +1,9 @@
 {
   "projects": [
-    "src", "test"
+    "src",
+    "src/codecs",
+    "src/channels",
+    "test"
   ],
   "sdk": {
     "version": "1.0.0-rc2-*"

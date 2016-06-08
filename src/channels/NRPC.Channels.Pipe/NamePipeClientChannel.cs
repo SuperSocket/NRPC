@@ -1,5 +1,6 @@
 
 using System;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
@@ -11,6 +12,18 @@ namespace NRPC.Channels.Pipe
             : base(options)
         {
             
+        }
+
+        protected new NamedPipeClientStream PipeStream
+        {
+            get
+            {
+                return base.PipeStream as NamedPipeClientStream;
+            }
+        }
+        protected override PipeStream CreatePipeStream(NamePipeConfig config)
+        {
+            return new NamedPipeClientStream(config.ServerName, config.PipeName, PipeDirection.InOut);
         }
     }
 }

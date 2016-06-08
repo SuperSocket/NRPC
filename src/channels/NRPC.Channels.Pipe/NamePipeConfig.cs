@@ -5,6 +5,8 @@ namespace NRPC.Channels.Pipe
 {
     public class NamePipeConfig
     {
-        public string Address { get; set; }
+        public string ServerName { get; set; }
+
+        public string PipeName { get; set; }
     }
 }
