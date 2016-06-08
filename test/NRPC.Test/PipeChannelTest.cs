@@ -18,12 +18,12 @@ namespace NRPC.Test
                 PipeName = "TestServerChannel"
             });
 
-            using(var serverChannel = new NamePipeServerChannel(options))
+            using(var serverChannelListener = new NamePipeChannelListener(options))
             using(var clientChannel = new NamePipeClientChannel(options))
             {
                 await Task.WhenAll(new Task[]
                     {
-                        serverChannel.Start(),
+                        serverChannelListener.ListenAsync(),
                         clientChannel.Start()
                     });
 
@@ -40,21 +40,24 @@ namespace NRPC.Test
                 PipeName = "TestServerChannel"
             });
 
-            using(var serverChannel = new NamePipeServerChannel(options))
+            using(var serverChannelListener = new NamePipeChannelListener(options))
             using(var clientChannelA = new NamePipeClientChannel(options))
             using(var clientChannelB = new NamePipeClientChannel(options))
             {
                 await Task.WhenAll(new Task[]
                     {
-                        serverChannel.Start(),
+                        serverChannelListener.ListenAsync(),
                         clientChannelA.Start()
                     });
 
                 Console.WriteLine("clientChannelA established.");
 
-                var connectTask = clientChannelB.Start();
+                await Task.WhenAll(new Task[]
+                    {
+                        serverChannelListener.ListenAsync(),
+                        clientChannelB.Start()
+                    });
 
-                Assert.Equal(connectTask, await Task.WhenAny(connectTask, Task.Delay(1000 * 5)));
                 Console.WriteLine("clientChannelB established.");
             }
         }

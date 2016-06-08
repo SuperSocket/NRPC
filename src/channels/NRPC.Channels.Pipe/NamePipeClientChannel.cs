@@ -22,7 +22,7 @@ namespace NRPC.Channels.Pipe
             }
         }
 
-        public override Task Start()
+        public Task Start()
         {
             return PipeStream.ConnectAsync();
         }

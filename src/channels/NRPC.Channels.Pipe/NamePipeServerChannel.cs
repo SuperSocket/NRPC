@@ -3,6 +3,7 @@ using System;
 using System.IO.Pipes;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using NRPC.Base;
 
 namespace NRPC.Channels.Pipe
 {
@@ -22,9 +23,9 @@ namespace NRPC.Channels.Pipe
             }
         }
 
-        public override Task Start()
+        public async Task AcceptAsync()
         {
-            return PipeStream.WaitForConnectionAsync();
+            await PipeStream.WaitForConnectionAsync();
         }
 
         protected override PipeStream CreatePipeStream(NamePipeConfig config)

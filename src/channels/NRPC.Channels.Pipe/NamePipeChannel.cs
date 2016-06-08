@@ -29,8 +29,6 @@ namespace NRPC.Channels.Pipe
 
         protected abstract PipeStream CreatePipeStream(NamePipeConfig config);
 
-        public abstract Task Start();
-
         public Task<ArraySegment<byte>> ReceiveAsync()
         {
             throw new NotImplementedException();
@@ -44,6 +42,9 @@ namespace NRPC.Channels.Pipe
         public void Dispose()
         {
             var pipeStream = m_PipeStream;
+
+            if (pipeStream == null)
+                return;
 
             if(Interlocked.CompareExchange(ref m_PipeStream, null, pipeStream) == pipeStream)
             {
