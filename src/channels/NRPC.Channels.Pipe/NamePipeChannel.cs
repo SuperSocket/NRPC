@@ -1,16 +1,18 @@
-
 using System;
 using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using NRPC.Base;
+using SuperSocket.ProtoBase;
 
 namespace NRPC.Channels.Pipe
 {
     public abstract class NamePipeChannel : IRpcChannel, IDisposable
     {
         protected NamePipeConfig Config { get; private set; }
+
+        private IPipelineProcessor m_PipeLineProcessor;
 
         private PipeStream m_PipeStream;
         protected virtual PipeStream PipeStream
@@ -28,6 +30,12 @@ namespace NRPC.Channels.Pipe
         }
 
         protected abstract PipeStream CreatePipeStream(NamePipeConfig config);
+
+
+        protected virtual void OnChannelReady()
+        {
+            //m_PipeLineProcessor = new DefaultPipelineProcessor<PipePackageInfo>(new PipeReceiveFilter(), 1024 * 64);
+        }
 
         public Task<ArraySegment<byte>> ReceiveAsync()
         {

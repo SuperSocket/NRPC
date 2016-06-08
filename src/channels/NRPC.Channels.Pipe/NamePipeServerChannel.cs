@@ -1,4 +1,3 @@
-
 using System;
 using System.IO.Pipes;
 using System.Threading.Tasks;
@@ -26,6 +25,7 @@ namespace NRPC.Channels.Pipe
         public async Task AcceptAsync()
         {
             await PipeStream.WaitForConnectionAsync();
+            OnChannelReady();
         }
 
         protected override PipeStream CreatePipeStream(NamePipeConfig config)

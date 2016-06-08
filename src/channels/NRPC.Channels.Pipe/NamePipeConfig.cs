@@ -1,4 +1,3 @@
-
 using System;
 
 namespace NRPC.Channels.Pipe

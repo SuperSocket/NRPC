@@ -7,7 +7,7 @@
       "netstandard1.3": {
         "dependencies": {
           "NRPC.Base": "*",
-          "SuperSocket.ProtoBase": "1.7.0-beta1",
+          "SuperSocket.ProtoBase": "1.7.0-beta6",
           "Microsoft.Extensions.Options":	"1.0.0-rc2-*",
           "System.Threading.Tasks": "4.0.11-rc2-*",
           "System.IO.Pipes": "4.0.0-rc2-*"

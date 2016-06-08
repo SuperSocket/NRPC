@@ -21,23 +21,56 @@ namespace NRPC.Channels.Pipe
 
         public async Task<IRpcChannel> ListenAsync()
         {
+            if (disposedValue)
+                throw new ObjectDisposedException("NamePipeChannelListener");
+
             var serverChannel = m_WaitingChannel = new NamePipeServerChannel(m_Options);
             await serverChannel.AcceptAsync();
             m_WaitingChannel = null;
             return serverChannel;
         }
 
-        public void Dispose()
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
         {
-            var waitingChannel = m_WaitingChannel;
-
-            if (waitingChannel == null)
-                return;
-
-            if(Interlocked.CompareExchange(ref m_WaitingChannel, null, waitingChannel) == waitingChannel)
+            if (!disposedValue)
             {
-                waitingChannel.Dispose();
+                if (disposing)
+                {
+                    var waitingChannel = m_WaitingChannel;
+
+                    if (waitingChannel == null)
+                        return;
+
+                    if(Interlocked.CompareExchange(ref m_WaitingChannel, null, waitingChannel) == waitingChannel)
+                    {
+                        waitingChannel.Dispose();
+                    }
+                }
+
+                // free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // no unmanaged resources to release
+
+                // set large fields to null.
+                m_Options = null;
+
+                disposedValue = true;
             }
         }
+
+        ~NamePipeChannelListener()
+        {
+           Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }
