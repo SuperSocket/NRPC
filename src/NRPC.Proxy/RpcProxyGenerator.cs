@@ -120,11 +120,11 @@ namespace NRPC.Proxy
             
             var il = mdb.GetILGenerator();
             
-            var methodInfoLabel = il.DeclareLocal(typeof(MethodInfo));
-            var argsLabel = il.DeclareLocal(typeof(object[]));
-            var interfaceInstanceLabel = il.DeclareLocal(typeof(IRpcProxy));
+            var methodInfoLocal = il.DeclareLocal(typeof(MethodInfo));
+            var argsLocal = il.DeclareLocal(typeof(object[]));
+            var interfaceInstanceLocal = il.DeclareLocal(typeof(IRpcProxy));
             
-            PutArgumentsToArray(il, paramTypes, argsLabel);
+            PutArgumentsToArray(il, paramTypes, argsLocal);
             
             var rpcProxyInterfaceType = typeof(IRpcProxy).GetTypeInfo();
             
@@ -141,22 +141,22 @@ namespace NRPC.Proxy
             il.Emit(OpCodes.Ldarg_0);
             // as IRpxProxy
             il.Emit(OpCodes.Castclass, typeof(IRpcProxy));
-            il.Emit(OpCodes.Stloc, interfaceInstanceLabel);
+            il.Emit(OpCodes.Stloc, interfaceInstanceLocal);
             
             // ((IRpxProxy)this).GetMethod(name)
-            il.Emit(OpCodes.Ldloc, interfaceInstanceLabel);
+            il.Emit(OpCodes.Ldloc, interfaceInstanceLocal);
             il.Emit(OpCodes.Ldc_I4, methodIndex);
             il.Emit(OpCodes.Callvirt, getMethodInfoMethod);
-            il.Emit(OpCodes.Stloc, methodInfoLabel);
+            il.Emit(OpCodes.Stloc, methodInfoLocal);
             
             // (IRpxProxy)this
-            il.Emit(OpCodes.Ldloc, interfaceInstanceLabel);
+            il.Emit(OpCodes.Ldloc, interfaceInstanceLocal);
 
             // load methodInfo
-            il.Emit(OpCodes.Ldloc, methodInfoLabel);
+            il.Emit(OpCodes.Ldloc, methodInfoLocal);
  
             // load args
-            il.Emit(OpCodes.Ldloc, argsLabel);
+            il.Emit(OpCodes.Ldloc, argsLocal);
 
             // invoke
             il.Emit(OpCodes.Callvirt, invokeMethod);
