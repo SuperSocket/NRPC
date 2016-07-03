@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,26 +27,21 @@ namespace NRPC.Client
         {
             ServiceProvider = serviceProvider;
             m_RpcChannel = serviceProvider.GetRequiredService<IRpcChannel>();
+            m_RpcChannel.NewPackageReceived += NewPackageReceived;
             m_RpcCodec = serviceProvider.GetRequiredService<IRpcCodec>();
             m_InvokeRepository = serviceProvider.GetRequiredService<IInvokeRepository>();
-            HanldeRequestResult();
         }
         
-        private async void HanldeRequestResult()
+        private void NewPackageReceived(RpcChannelPackageInfo packageInfo)
         {
-            while (true)
-            {
-                var data = await m_RpcChannel.ReceiveAsync();
+            if (packageInfo.Data.Count == 0)
+                return;
                 
-                if (data.Count == 0)
-                    break;
-                    
-                var result = m_RpcCodec.DecodeInvokeResult(data);
-                
-                var invokeState = m_InvokeRepository.TakeInvokeState(result.Id);
-                
-                invokeState.ResultHandle.BeginInvoke(result.Result, null, null);
-            }
+            var result = m_RpcCodec.DecodeInvokeResult(packageInfo.Data);
+            
+            var invokeState = m_InvokeRepository.TakeInvokeState(result.Id);
+            
+            invokeState.ResultHandle.BeginInvoke(result.Result, null, null);
         }
 
         
@@ -72,7 +66,7 @@ namespace NRPC.Client
         {
             try
             {
-                await m_RpcChannel.SendAsync(m_RpcCodec.Encode(request));
+                await m_RpcChannel.SendAsync(new ArraySegment<byte>[] { m_RpcCodec.Encode(request) });
             }
             catch (System.Exception e)
             {

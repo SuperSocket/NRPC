@@ -13,7 +13,8 @@ namespace NRPC.Channels.Pipe
 
         public override PipePackageInfo ResolvePackage(IBufferStream bufferStream)
         {
-            throw new NotImplementedException();
+            bufferStream.Skip(2);
+            return new PipePackageInfo { Data = bufferStream.Buffers  };
         }
 
         protected override int GetBodyLengthFromHeader(IBufferStream bufferStream, int length)

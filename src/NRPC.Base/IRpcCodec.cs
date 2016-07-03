@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace NRPC.Base
 {
@@ -27,14 +28,14 @@ namespace NRPC.Base
         /// </summary>
         /// <param name="data">the raw binary data</param>
         /// <returns>the InvokeResult instance after decoding</returns>
-        InvokeResult DecodeInvokeResult(ArraySegment<byte> data);
+        InvokeResult DecodeInvokeResult(IList<ArraySegment<byte>> data);
         
         /// <summary>
         /// Decode the binary data to InvokeRequest
         /// </summary>
         /// <param name="data">the raw binary data</param>
         /// <returns>the InvokeRequest instance after decoding</returns>
-        InvokeRequest DecodeRequest(ArraySegment<byte> data);
+        InvokeRequest DecodeRequest(IList<ArraySegment<byte>> data);
         
 
         /// <summary>

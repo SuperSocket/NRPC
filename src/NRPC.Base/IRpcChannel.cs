@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace NRPC.Base
@@ -13,12 +14,12 @@ namespace NRPC.Base
         /// </summary>
         /// <param name="data"></param>
         /// <returns>A task that represents the asynchronous send operation</returns>
-        Task SendAsync(ArraySegment<byte> data);
+        Task SendAsync(IList<ArraySegment<byte>> data);
         
+
         /// <summary>
-        /// Receive data from the channnel
+        /// event for new package info is received from the channel
         /// </summary>
-        /// <returns>A task that represents the asynchronous receive operation. The task result is the received binary data.</returns>
-        Task<ArraySegment<byte>> ReceiveAsync();
+        event Action<RpcChannelPackageInfo> NewPackageReceived;
     }
 }

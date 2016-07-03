@@ -6,8 +6,8 @@
   "frameworks": {
       "netstandard1.1": {
         "dependencies": {
-          "System.Threading.Tasks": "4.0.11-rc2-*",
-          "Microsoft.Extensions.DependencyInjection": "1.0.0-rc2-*"
+          "System.Threading.Tasks": "4.0.11",
+          "Microsoft.Extensions.DependencyInjection": "1.0.0"
         }
       }
   }

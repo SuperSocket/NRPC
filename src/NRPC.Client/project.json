@@ -10,7 +10,7 @@
     "netstandard1.3": {
       "dependencies": {
         "NRPC.Proxy": "*",
-        "Microsoft.Extensions.DependencyInjection": "1.0.0-rc2-*"
+        "Microsoft.Extensions.DependencyInjection": "1.0.0"
       }
     }
   }

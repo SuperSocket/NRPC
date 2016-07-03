@@ -3,15 +3,18 @@ using System.Text;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using NRPC.Base;
+using System.IO;
 
 namespace NRPC.Codecs
 {
     public class JsonCodec : IRpcCodec
     {
-        public InvokeResult DecodeInvokeResult(ArraySegment<byte> data)
+        public InvokeResult DecodeInvokeResult(IList<ArraySegment<byte>> data)
         {
-            var result = JObject.Parse(Encoding.UTF8.GetString(data.Array, data.Offset, data.Count));
+            var length = data.Sum(s => s.Count);
+            var result = JObject.Parse(Encoding.UTF8.GetString(data, 0, length));
 
             return new InvokeResult
             {
@@ -20,9 +23,10 @@ namespace NRPC.Codecs
             };
         }
 
-        public InvokeRequest DecodeRequest(ArraySegment<byte> data)
+        public InvokeRequest DecodeRequest(IList<ArraySegment<byte>> data)
         {
-            var request = JObject.Parse(Encoding.UTF8.GetString(data.Array, data.Offset, data.Count));
+            var length = data.Sum(s => s.Count);
+            var request = JObject.Parse(Encoding.UTF8.GetString(data, 0, length));
 
             return new InvokeRequest
             {

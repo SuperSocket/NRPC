@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +17,11 @@ namespace NRPC.Channels.Pipe
         private IPipelineProcessor m_PipeLineProcessor;
 
         private PipeStream m_PipeStream;
+
+        public event Action<RpcChannelPackageInfo> NewPackageReceived;
+
+        private CancellationTokenSource m_ChannelCancelToken = new CancellationTokenSource();
+
         protected virtual PipeStream PipeStream
         {
             get { return m_PipeStream; }
@@ -34,17 +41,52 @@ namespace NRPC.Channels.Pipe
 
         protected virtual void OnChannelReady()
         {
-            //m_PipeLineProcessor = new DefaultPipelineProcessor<PipePackageInfo>(new PipeReceiveFilter(), 1024 * 64);
+            m_PipeLineProcessor = new DefaultPipelineProcessor<PipePackageInfo>(new PipeReceiveFilter(), 1024 * 64);
+            StartReceive();
         }
 
-        public Task<ArraySegment<byte>> ReceiveAsync()
+        private async void StartReceive()
+        {
+            var buffer = new byte[m_PipeStream.InBufferSize];
+
+            var cancellationToken = m_ChannelCancelToken.Token;
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var result = await m_PipeStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                var processResult = m_PipeLineProcessor.Process(new ArraySegment<byte>(buffer, 0, result));
+                
+                if (processResult.State == ProcessState.Error)
+                {
+                    Debug.Fail("Pipeline processing failed.");
+                    break;
+                }
+                else if(processResult.State == ProcessState.Cached)
+                {
+                    buffer = new byte[m_PipeStream.InBufferSize];
+                }
+
+                if (processResult.Packages != null && processResult.Packages.Count > 0)
+                {
+                    foreach (var item in processResult.Packages)
+                    {
+                        HandlePipePackage(item as PipePackageInfo);
+                    }
+                }
+            }
+        }
+
+        public Task SendAsync(IList<ArraySegment<byte>> data)
         {
             throw new NotImplementedException();
         }
 
-        public Task SendAsync(ArraySegment<byte> data)
+        void HandlePipePackage(PipePackageInfo package)
         {
-            throw new NotImplementedException();
+            var handler = NewPackageReceived;
+
+            if (handler != null)
+                handler.Invoke(package);
         }
 
         public void Dispose()
@@ -56,6 +98,7 @@ namespace NRPC.Channels.Pipe
 
             if(Interlocked.CompareExchange(ref m_PipeStream, null, pipeStream) == pipeStream)
             {
+                m_ChannelCancelToken.Cancel();
                 pipeStream.Dispose();
             }
         }
