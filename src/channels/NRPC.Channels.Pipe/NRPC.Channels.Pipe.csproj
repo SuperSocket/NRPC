@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SuperSocket.ProtoBase" Version="1.7.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
+    <PackageReference Include="System.IO.Pipes" Version="4.3.0" />    
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NRPC.Base\NRPC.Base.csproj" />
+  </ItemGroup>
+</Project>
