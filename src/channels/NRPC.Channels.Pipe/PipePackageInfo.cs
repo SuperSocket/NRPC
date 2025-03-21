@@ -5,7 +5,7 @@ using NRPC.Base;
 
 namespace NRPC.Channels.Pipe
 {
-    public class PipePackageInfo : RpcChannelPackageInfo, IPackageInfo
+    public class PipePackageInfo : RpcChannelPackageInfo
     {
 
     }

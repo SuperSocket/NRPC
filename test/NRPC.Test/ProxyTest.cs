@@ -30,7 +30,7 @@ namespace NRPC.Test
         }
         
         [Fact]
-        public async void TestProxyCreation()
+        public async Task TestProxyCreation()
         {
             var caculator = RpcProxy.Create<ICaculator, ProxyTest>();            
             Assert.Equal(3, await caculator.Add(1, 2));

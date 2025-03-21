@@ -1,25 +1,22 @@
 using System;
+using System.Buffers;
 using SuperSocket.ProtoBase;
 
 namespace NRPC.Channels.Pipe
 {
-    public class PipeReceiveFilter : FixedHeaderReceiveFilter<PipePackageInfo>
+    public class PipePipelineFilter : FixedHeaderPipelineFilter<PipePackageInfo>
     {
-        public PipeReceiveFilter()
+        public PipePipelineFilter()
             : base(2)
         {
 
         }
 
-        public override PipePackageInfo ResolvePackage(IBufferStream bufferStream)
+        protected override int GetBodyLengthFromHeader(ref ReadOnlySequence<byte> buffer)
         {
-            bufferStream.Skip(2);
-            return new PipePackageInfo { Data = bufferStream.Buffers  };
-        }
-
-        protected override int GetBodyLengthFromHeader(IBufferStream bufferStream, int length)
-        {
-            return bufferStream.ReadInt16();
+            var sequnceReader = new SequenceReader<byte>(buffer);
+            sequnceReader.TryReadBigEndian(out short length);
+            return length;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace NRPC.Channels.Pipe
     {
         protected NamePipeConfig Config { get; private set; }
 
-        private IPipelineProcessor m_PipeLineProcessor;
+        private IPipelineFilter m_PipeLineProcessor;
 
         private PipeStream m_PipeStream;
 
