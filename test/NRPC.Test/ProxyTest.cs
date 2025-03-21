@@ -12,6 +12,8 @@ namespace NRPC.Test
         Task<int> Add(int x, int y);
         
         Task<string> Concact(string x, string y);
+
+        Task Execute(string command);
     }
     
     public class ProxyTest : RpcProxy
@@ -25,8 +27,10 @@ namespace NRPC.Test
         {
             if (targetMethod.Name == "Add")
                 return Task.FromResult(args.Select(a => (int)a).Sum());
-            else
+            else if (targetMethod.Name == "Concact")
                 return Task.FromResult(string.Join("", args.Select(a => (string)a).ToArray()));
+            else
+                return Task.Delay(1000);
         }
         
         [Fact]
@@ -35,6 +39,7 @@ namespace NRPC.Test
             var caculator = RpcProxy.Create<ICaculator, ProxyTest>();            
             Assert.Equal(3, await caculator.Add(1, 2));
             Assert.Equal("Hello World", await caculator.Concact("Hello ", "World"));
+            await caculator.Execute("Do something");
         }
     }
 }
