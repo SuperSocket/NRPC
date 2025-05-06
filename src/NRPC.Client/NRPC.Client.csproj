@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NRPC.Base\NRPC.Base.csproj" />
+    <ProjectReference Include="..\NRPC.Abstractions\NRPC.Abstractions.csproj" />
     <ProjectReference Include="..\NRPC.Proxy\NRPC.Proxy.csproj" />
   </ItemGroup>
 

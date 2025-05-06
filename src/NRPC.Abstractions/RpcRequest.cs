@@ -1,9 +1,9 @@
-namespace NRPC.Base
+namespace NRPC.Abstractions
 {
     /// <summary>
-    /// Invoke request
+    /// Rpc request
     /// </summary>
-    public class InvokeRequest
+    public class RpcRequest
     {
         /// <summary>
         ///  The id of the request

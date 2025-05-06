@@ -3,10 +3,12 @@ using System.Threading.Tasks;
 
 namespace NRPC.Client
 {
-    public class InvokeState
+    class InvokeState
     {
         public DateTime TimeToTimeOut { get; set; }
+
+        public object TaskCompletionSource { get; set; }
         
-        public Action<object> ResultHandle { get; set; }
+        public IResponseHandler ResponseHandler { get; set; }
     }
 }

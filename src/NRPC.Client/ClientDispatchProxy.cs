@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using NRPC.Base;
+using NRPC.Abstractions;
 using NRPC.Proxy;
 
 namespace NRPC.Client
@@ -11,13 +15,12 @@ namespace NRPC.Client
     {
         protected IServiceProvider ServiceProvider { get; private set; }
         
-        private IRpcChannel m_RpcChannel;
-        
-        private IRpcCodec m_RpcCodec;
-        
-        private IInvokeRepository m_InvokeRepository;
-        
-        
+        private IRpcConnection m_RpcConnection;
+
+        private IReadOnlyDictionary<MethodInfo, IResponseHandler> m_ResponseHandlers;
+
+        private ConcurrentDictionary<int, InvokeState> m_InvokeStates = new ConcurrentDictionary<int, InvokeState>();
+                
         static ClientDispatchProxy()
         {
             
@@ -26,30 +29,59 @@ namespace NRPC.Client
         public ClientDispatchProxy(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
-            m_RpcChannel = serviceProvider.GetRequiredService<IRpcChannel>();
-            m_RpcChannel.NewPackageReceived += NewPackageReceived;
-            m_RpcCodec = serviceProvider.GetRequiredService<IRpcCodec>();
-            m_InvokeRepository = serviceProvider.GetRequiredService<IInvokeRepository>();
-        }
-        
-        private void NewPackageReceived(RpcChannelPackageInfo packageInfo)
-        {
-            if (packageInfo.Data.Count == 0)
-                return;
-                
-            var result = m_RpcCodec.DecodeInvokeResult(packageInfo.Data);
-            
-            var invokeState = m_InvokeRepository.TakeInvokeState(result.Id);
-            
-            invokeState.ResultHandle.BeginInvoke(result.Result, null, null);
+            m_RpcConnection = serviceProvider.GetRequiredService<IRpcConnection>();
         }
 
-        
-        private TaskCompletionSource<T> CreateInvokeTaskSrc<T>(MethodInfo targetMethod, object[] args)
+        private IResponseHandler CreateResponseHandler(MethodInfo methodInfo)
         {
-            var taskCompletionSrc = new TaskCompletionSource<T>();
-            
-            var request = new InvokeRequest
+            if (methodInfo.ReturnType == typeof(Task))
+            {
+                return new VoidResponseHandler();
+            }
+            else if (methodInfo.ReturnType.IsGenericType && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                var genericArgument = methodInfo.ReturnType.GenericTypeArguments[0];
+                return Activator.CreateInstance(typeof(TypedResponseHandler<>).MakeGenericType(genericArgument)) as IResponseHandler;
+            }
+            else
+            {
+                throw new NotSupportedException($"Method {methodInfo.Name} return type is not supported.");
+            }
+        }
+
+        private void InitializeResponseHanders()
+        {
+            var serviceContractAtribute = typeof(ServiceContractAtribute);
+            var serviceContract = this.GetType().GetInterfaces().FirstOrDefault(
+                t => t.GetCustomAttribute(serviceContractAtribute) != null);
+
+            var taskType = typeof(Task);
+
+            m_ResponseHandlers = serviceContract.GetMethods()
+                .ToDictionary(
+                    m => m,
+                    m => CreateResponseHandler(m));
+        }
+
+        private async Task ReadResponseAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var rpcResponse = await m_RpcConnection.ReceiveAsync(cancellationToken);
+                
+                if (rpcResponse == null)
+                    continue;
+
+                if (!m_InvokeStates.TryRemove(rpcResponse.Id, out var invokeState))
+                    return;
+
+                invokeState.ResponseHandler.HandleResponse(invokeState.TaskCompletionSource, rpcResponse);
+            }                
+        }
+        
+        private async Task<InvokeState> CreateInvoke(MethodInfo targetMethod, object[] args)
+        {
+            var request = new RpcRequest
                 {
                     MethodName = targetMethod.Name,
                     Arguments = args
@@ -57,41 +89,43 @@ namespace NRPC.Client
                 
             request.Id = Guid.NewGuid().GetHashCode();
 
-            SendRequestAsync(taskCompletionSrc, request);
-                
-            return taskCompletionSrc;
+            var responseHandler = m_ResponseHandlers[targetMethod];
+
+            return await SendRequestAsync(request, responseHandler);
         }
 
-        private async void SendRequestAsync<T>(TaskCompletionSource<T> taskCompletionSrc, InvokeRequest request)
+        private async Task<InvokeState> SendRequestAsync(RpcRequest request, IResponseHandler responseHandler)
         {
+            var taskCompletionSrc = responseHandler.CreateTaskCompletionSource();
+
+            var invokeState = new InvokeState
+            {
+                TaskCompletionSource = taskCompletionSrc,
+                TimeToTimeOut = DateTime.UtcNow.AddSeconds(30),
+                ResponseHandler = responseHandler
+            };
+            
+            if (!m_InvokeStates.TryAdd(request.Id, invokeState))
+            {
+                throw new Exception($"InvokeState with ID {request.Id} already exists.");
+            }
+
             try
             {
-                await m_RpcChannel.SendAsync(new ArraySegment<byte>[] { m_RpcCodec.Encode(request) });
+                await m_RpcConnection.SendAsync(request);
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
-                taskCompletionSrc.SetException(e);
-                return;
+                responseHandler.SetConnectionError(taskCompletionSrc, e);
             }
 
-            m_InvokeRepository.RegisterInvokeState(request.Id,
-                new InvokeState
-                {
-                    TimeToTimeOut = DateTime.Now.AddMinutes(5),
-                    ResultHandle = (r) =>
-                    {
-                        if (typeof(T) == typeof(object))
-                            taskCompletionSrc.SetResult(default(T));
-                        else
-                            taskCompletionSrc.SetResult(m_RpcCodec.DecodeResult<T>(r));
-                    }
-                });
+            return invokeState;
         }
         
-        protected override Task Invoke<T>(MethodInfo targetMethod, object[] args)
+        protected override async Task Invoke<T>(MethodInfo targetMethod, object[] args)
         {
-            var taskCompletionSrc = CreateInvokeTaskSrc<T>(targetMethod, args);
-            return taskCompletionSrc.Task;
+            var invokeState = await CreateInvoke(targetMethod, args);
+            await invokeState.ResponseHandler.GetTask(invokeState.TaskCompletionSource);
         }
 
         T IRpcDispatchProxy.CreateClient<T>()

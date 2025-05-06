@@ -1,9 +1,9 @@
-namespace NRPC.Base
+namespace NRPC.Abstractions
 {
     /// <summary>
     /// The invoke result
     /// </summary>
-    public class InvokeResult
+    public class RpcResponse
     {
         /// <summary>
         /// The id of the result which is used for matching its invoke request
@@ -14,5 +14,7 @@ namespace NRPC.Base
         /// The invoke result data
         /// </summary>
         public object Result { get; set; }
+
+        public RpcError Error { get; set; }
     }
 }
