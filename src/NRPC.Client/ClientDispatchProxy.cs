@@ -11,25 +11,32 @@ using NRPC.Proxy;
 
 namespace NRPC.Client
 {
-    public abstract class ClientDispatchProxy : RpcProxy, IRpcDispatchProxy
-    {
-        protected IServiceProvider ServiceProvider { get; private set; }
-        
+    public class ClientDispatchProxy : RpcProxy, IRpcDispatchProxy, IDisposable
+    {        
         private IRpcConnection m_RpcConnection;
 
         private IReadOnlyDictionary<MethodInfo, IResponseHandler> m_ResponseHandlers;
 
         private ConcurrentDictionary<int, InvokeState> m_InvokeStates = new ConcurrentDictionary<int, InvokeState>();
-                
-        static ClientDispatchProxy()
-        {
-            
-        }
+
+        private CancellationTokenSource m_ReadCancellationTokenSource = new CancellationTokenSource();
         
-        public ClientDispatchProxy(IServiceProvider serviceProvider)
+        public ClientDispatchProxy(IRpcConnection rpcConnection)
         {
-            ServiceProvider = serviceProvider;
-            m_RpcConnection = serviceProvider.GetRequiredService<IRpcConnection>();
+            m_RpcConnection = rpcConnection;
+            InitializeResponseHanders();
+            StartReadResponse();
+        }
+
+        private void StartReadResponse()
+        {
+            _ = ReadResponseAsync(m_ReadCancellationTokenSource.Token).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    // Handle exception
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private IResponseHandler CreateResponseHandler(MethodInfo methodInfo)
@@ -137,19 +144,11 @@ namespace NRPC.Client
         {
             return RpcProxy.Create<T, ClientDispatchProxy>();
         }
-    }
-    
-    public abstract class ClientDispatchProxy<TDispatchProxy> : ClientDispatchProxy
-        where TDispatchProxy : ClientDispatchProxy
-    {
-        public ClientDispatchProxy(IServiceProvider serviceProvider)
-            : base(serviceProvider)
-        {
 
-        }
-        protected override T CreateClient<T>()
+        public void Dispose()
         {
-            return RpcProxy.Create<T, TDispatchProxy>();
+            m_ReadCancellationTokenSource.Cancel();
+            m_ReadCancellationTokenSource.Dispose();
         }
     }
 }
