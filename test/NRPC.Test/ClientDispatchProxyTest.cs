@@ -80,18 +80,31 @@ namespace NRPC.Test
         }
     }
 
+    public class MockRpcConnectionFactory : IRpcConnectionFactory
+    {
+        private readonly MockRpcConnection mockRpcConnection;
+
+        public MockRpcConnectionFactory(MockRpcConnection mockRpcConnection)
+        {
+            this.mockRpcConnection = mockRpcConnection;
+        }
+
+        public IRpcConnection CreateConnection()
+        {
+            return mockRpcConnection;
+        }
+    }
+
     public class ClientDispatchProxyTest
     {
         [Fact]
         public async Task TestDispatchProxyCreation()
         {
-            var mockRpcConnection = new MockRpcConnection();
+            // Arrange
+            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
-            // Create a concrete instance of ClientDispatchProxy
-            var proxy = new ClientDispatchProxy(mockRpcConnection) as IRpcDispatchProxy;
-
             // Act
-            ITestService client = proxy.CreateClient<ITestService>();
+            var client = clientFactory.CreateClient();
             
             // Assert
             Assert.NotNull(client);
@@ -103,13 +116,11 @@ namespace NRPC.Test
         {
             // Arrange
             RpcRequest capturedRequest = null;
-            
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
-            
-            var proxy = new ClientDispatchProxy(mockRpcConnection);
-            
+            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+
             // Act
-            var client = (proxy as IRpcDispatchProxy).CreateClient<ITestService>();
+            var client = clientFactory.CreateClient();
             
             // Start a task that will process the response asynchronously
             var responseTask = Task.Run(async () =>
@@ -140,12 +151,12 @@ namespace NRPC.Test
             RpcRequest capturedRequest = null;
             
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
-            
-            var proxy = new ClientDispatchProxy(mockRpcConnection) as IRpcDispatchProxy;
-            
+
+            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+
             // Act
-            var client = proxy.CreateClient<ITestService>();
-            
+            var client = clientFactory.CreateClient();
+
             // Start a task that will process the response asynchronously
             var responseTask = Task.Run(async () =>
             {
@@ -176,11 +187,11 @@ namespace NRPC.Test
             
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
 
-            var proxy = new ClientDispatchProxy(mockRpcConnection) as IRpcDispatchProxy;
-            
+            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+
             // Act
-            var client = proxy.CreateClient<ITestService>();
-            
+            var client = clientFactory.CreateClient();
+
             // Start a task that will process the response asynchronously
             var responseTask = Task.Run(async () =>
             {
@@ -198,25 +209,6 @@ namespace NRPC.Test
             Assert.Equal("ExecuteVoid", capturedRequest.MethodName);
             Assert.Equal(1, capturedRequest.Arguments.Length);
             Assert.Equal("test command", capturedRequest.Arguments[0]);
-        }
-
-        [Fact]
-        public async Task TestDispatchProxyGenericCreation()
-        {
-            // Test the generic version of ClientDispatchProxy
-            var services = new ServiceCollection();
-            services.AddSingleton<IRpcConnection, MockRpcConnection>();
-            var serviceProvider = services.BuildServiceProvider();
-
-            // Create a proxy using the generic version
-            var proxy = new ClientDispatchProxy(new MockRpcConnection()) as IRpcDispatchProxy;
-            
-            // Act
-            ITestService client = proxy.CreateClient<ITestService>();
-            
-            // Assert
-            Assert.NotNull(client);
-            Assert.IsAssignableFrom<ITestService>(client);
         }
     }
 }

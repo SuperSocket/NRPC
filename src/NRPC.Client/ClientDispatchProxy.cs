@@ -11,7 +11,7 @@ using NRPC.Proxy;
 
 namespace NRPC.Client
 {
-    public class ClientDispatchProxy : RpcProxy, IRpcDispatchProxy, IDisposable
+    public class ClientDispatchProxy : RpcProxy, IDisposable
     {        
         private IRpcConnection m_RpcConnection;
 
@@ -21,7 +21,11 @@ namespace NRPC.Client
 
         private CancellationTokenSource m_ReadCancellationTokenSource = new CancellationTokenSource();
         
-        public ClientDispatchProxy(IRpcConnection rpcConnection)
+        public ClientDispatchProxy()
+        {
+        }
+
+        internal void Initialize(IRpcConnection rpcConnection)
         {
             m_RpcConnection = rpcConnection;
             InitializeResponseHanders();
@@ -133,16 +137,6 @@ namespace NRPC.Client
         {
             var invokeState = await CreateInvoke(targetMethod, args);
             await invokeState.ResponseHandler.GetTask(invokeState.TaskCompletionSource);
-        }
-
-        T IRpcDispatchProxy.CreateClient<T>()
-        {
-            return CreateClient<T>();
-        }
-        
-        protected virtual T CreateClient<T>()
-        {
-            return RpcProxy.Create<T, ClientDispatchProxy>();
         }
 
         public void Dispose()
