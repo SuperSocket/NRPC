@@ -7,6 +7,7 @@ using NRPC.Abstractions;
 using NRPC.Client;
 using Xunit;
 using System.Collections.Generic;
+using System.Threading.Channels;
 
 namespace NRPC.Test
 {
@@ -22,7 +23,7 @@ namespace NRPC.Test
 
     public class MockRpcConnection : IRpcConnection
     {
-        private readonly Dictionary<int, RpcRequest> _requests = new Dictionary<int, RpcRequest>();
+        private readonly Channel<RpcRequest> _requestChannel = Channel.CreateUnbounded<RpcRequest>();
         private readonly Action<RpcRequest> _requestAction;
 
         public MockRpcConnection(Action<RpcRequest> requestAction = null)
@@ -32,51 +33,41 @@ namespace NRPC.Test
 
         public Task SendAsync(RpcRequest request)
         {
-            _requests[request.Id] = request;
+            _requestChannel.Writer.TryWrite(request);
             _requestAction?.Invoke(request);
             return Task.CompletedTask;
         }
 
-        public Task<RpcResponse> ReceiveAsync(CancellationToken cancellationToken = default)
+        public async Task<RpcResponse> ReceiveAsync(CancellationToken cancellationToken = default)
         {
+            var request = await _requestChannel.Reader.ReadAsync(cancellationToken);
+
             var response = new RpcResponse();
-            
-            // Find the last request and generate a response for it
-            if (_requests.Count > 0)
+
+            response.Id = request.Id;
+
+            if (request.MethodName == "Add")
             {
-                var lastRequest = _requests[_requests.Keys.Max()];
-                response.Id = lastRequest.Id;
-
-                if (lastRequest.MethodName == "Add")
-                {
-                    int x = (int)lastRequest.Arguments[0];
-                    int y = (int)lastRequest.Arguments[1];
-                    response.Result = x + y;
-                }
-                else if (lastRequest.MethodName == "Concat")
-                {
-                    string x = (string)lastRequest.Arguments[0];
-                    string y = (string)lastRequest.Arguments[1];
-                    response.Result = x + y;
-                }
-                else if (lastRequest.MethodName == "ExecuteVoid")
-                {
-                    // No result for void
-                }
-                else
-                {
-                    response.Error = new RpcError(404, "Method not found");
-                }
-
-                _requests.Remove(lastRequest.Id);
+                int x = (int)request.Arguments[0];
+                int y = (int)request.Arguments[1];
+                response.Result = x + y;
+            }
+            else if (request.MethodName == "Concat")
+            {
+                string x = (string)request.Arguments[0];
+                string y = (string)request.Arguments[1];
+                response.Result = x + y;
+            }
+            else if (request.MethodName == "ExecuteVoid")
+            {
+                // No result for void
             }
             else
             {
-                // No pending requests
-                return Task.FromResult<RpcResponse>(null);
+                response.Error = new RpcError(404, "Method not found");
             }
 
-            return Task.FromResult(response);
+            return response;
         }
     }
 
@@ -121,19 +112,8 @@ namespace NRPC.Test
 
             // Act
             var client = clientFactory.CreateClient();
-            
-            // Start a task that will process the response asynchronously
-            var responseTask = Task.Run(async () =>
-            {
-                await Task.Delay(100); // Small delay to ensure the request is sent
-                await mockRpcConnection.ReceiveAsync();
-            });
-            
             // Invoke the method
-            var resultTask = client.Add(5, 10);
-            
-            await Task.WhenAll(responseTask, resultTask);
-            var result = await resultTask;
+            var result = await client.Add(5, 10);
             
             // Assert
             Assert.NotNull(capturedRequest);
@@ -157,18 +137,8 @@ namespace NRPC.Test
             // Act
             var client = clientFactory.CreateClient();
 
-            // Start a task that will process the response asynchronously
-            var responseTask = Task.Run(async () =>
-            {
-                await Task.Delay(100); // Small delay to ensure the request is sent
-                await mockRpcConnection.ReceiveAsync();
-            });
-            
             // Invoke the method
-            var resultTask = client.Concat("Hello, ", "World!");
-            
-            await Task.WhenAll(responseTask, resultTask);
-            var result = await resultTask;
+            var result = await client.Concat("Hello, ", "World!");
             
             // Assert
             Assert.NotNull(capturedRequest);
@@ -191,18 +161,9 @@ namespace NRPC.Test
 
             // Act
             var client = clientFactory.CreateClient();
-
-            // Start a task that will process the response asynchronously
-            var responseTask = Task.Run(async () =>
-            {
-                await Task.Delay(100); // Small delay to ensure the request is sent
-                await mockRpcConnection.ReceiveAsync();
-            });
             
             // Invoke the void method
-            var resultTask = client.ExecuteVoid("test command");
-            
-            await Task.WhenAll(responseTask, resultTask);
+            await client.ExecuteVoid("test command");
             
             // Assert
             Assert.NotNull(capturedRequest);
