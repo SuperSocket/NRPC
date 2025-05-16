@@ -89,7 +89,7 @@ namespace NRPC.Test
     public class ClientDispatchProxyTest
     {
         [Fact]
-        public async Task TestDispatchProxyCreation()
+        public void TestDispatchProxyCreation()
         {
             // Arrange
             var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
@@ -168,7 +168,7 @@ namespace NRPC.Test
             // Assert
             Assert.NotNull(capturedRequest);
             Assert.Equal("ExecuteVoid", capturedRequest.MethodName);
-            Assert.Equal(1, capturedRequest.Arguments.Length);
+            Assert.Single(capturedRequest.Arguments);
             Assert.Equal("test command", capturedRequest.Arguments[0]);
         }
     }
