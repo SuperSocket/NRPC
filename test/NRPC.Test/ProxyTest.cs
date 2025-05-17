@@ -23,14 +23,14 @@ namespace NRPC.Test
             
         }
 
-        protected override Task Invoke<T>(MethodInfo targetMethod, object[] args)
+        protected override Task<T> Invoke<T>(MethodInfo targetMethod, object[] args)
         {
             if (targetMethod.Name == "Add")
-                return Task.FromResult(args.Select(a => (int)a).Sum());
+                return Task.FromResult(args.Select(a => (int)a).Sum()) as Task<T>;
             else if (targetMethod.Name == "Concact")
-                return Task.FromResult(string.Join("", args.Select(a => (string)a).ToArray()));
+                return Task.FromResult(string.Join("", args.Select(a => (string)a).ToArray())) as Task<T>;
             else
-                return Task.Delay(1000);
+                return Task.Delay(1000).ContinueWith(t => default(T));
         }
         
         [Fact]

@@ -23,7 +23,7 @@ namespace NRPC.Proxy
             return RpcProxyGenerator.GetMethodInfo(index);
         }
         
-        protected abstract Task Invoke<T>(MethodInfo targetMethod, object[] args);
+        protected abstract Task<T> Invoke<T>(MethodInfo targetMethod, object[] args);
         
         public static T Create<T, TProxy>()
             where TProxy : RpcProxy

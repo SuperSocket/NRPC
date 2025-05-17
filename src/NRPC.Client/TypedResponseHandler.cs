@@ -16,7 +16,7 @@ namespace NRPC.Client
             return ((TaskCompletionSource<T>)taskCompletionSource).Task;
         }
 
-        public void HandleResponse(object taskCompletionSource, RpcResponse response)
+        public virtual void HandleResponse(object taskCompletionSource, RpcResponse response)
         {
             var tcs = taskCompletionSource as TaskCompletionSource<T>;
 

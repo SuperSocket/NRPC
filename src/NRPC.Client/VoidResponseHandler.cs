@@ -4,21 +4,11 @@ using NRPC.Abstractions;
 
 namespace NRPC.Client
 {
-    public class VoidResponseHandler : IResponseHandler
+    class VoidResponseHandler : TypedResponseHandler<object>
     {
-        public object CreateTaskCompletionSource()
+        public override void HandleResponse(object taskCompletionSource, RpcResponse response)
         {
-            return new TaskCompletionSource();
-        }
-
-        public Task GetTask(object taskCompletionSource)
-        {
-            return ((TaskCompletionSource)taskCompletionSource).Task;
-        }
-
-        public void HandleResponse(object taskCompletionSource, RpcResponse response)
-        {
-            var tcs = taskCompletionSource as TaskCompletionSource;
+            var tcs = taskCompletionSource as TaskCompletionSource<Object>;
 
             if (response.Error != null)
             {
@@ -26,17 +16,7 @@ namespace NRPC.Client
             }
             else
             {
-                tcs.SetResult();
-            }
-        }
-
-        public void SetConnectionError(object taskCompletionSource, Exception exception)
-        {
-            var tcs = taskCompletionSource as TaskCompletionSource;
-
-            if (tcs != null)
-            {
-                tcs.SetException(exception);
+                tcs.SetResult(null);
             }
         }
     }

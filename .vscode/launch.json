@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Debug Tests",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/test/NRPC.Test/bin/Debug/net9.0/NRPC.Test.dll",
+            "args": [
+                "--settings", "${workspaceFolder}/.runsettings"
+            ],
+            "cwd": "${workspaceFolder}/test/NRPC.Test",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": ".NET Core Test Explorer Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/test/NRPC.Test/NRPC.Test.csproj",
+                "--filter", "${dotNetTestExplorer.testFilter}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": false
+        }
+    ]
+}

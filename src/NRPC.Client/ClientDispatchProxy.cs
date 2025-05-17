@@ -132,11 +132,12 @@ namespace NRPC.Client
 
             return invokeState;
         }
-        
-        protected override async Task Invoke<T>(MethodInfo targetMethod, object[] args)
+
+        protected override async Task<T> Invoke<T>(MethodInfo targetMethod, object[] args)
         {
             var invokeState = await CreateInvoke(targetMethod, args);
-            await invokeState.ResponseHandler.GetTask(invokeState.TaskCompletionSource);
+            var result = await (invokeState.ResponseHandler.GetTask(invokeState.TaskCompletionSource) as Task<T>);
+            return result;
         }
 
         public void Dispose()
