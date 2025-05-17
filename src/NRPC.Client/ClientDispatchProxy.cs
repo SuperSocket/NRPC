@@ -90,15 +90,22 @@ namespace NRPC.Client
             }                
         }
         
-        private async Task<InvokeState> CreateInvoke(MethodInfo targetMethod, object[] args)
+        protected virtual RpcRequest CreateRequest(MethodInfo targetMethod, object[] args)
         {
             var request = new RpcRequest
-                {
-                    MethodName = targetMethod.Name,
-                    Arguments = args
-                };
-                
+            {
+                MethodName = targetMethod.Name,
+                Arguments = args
+            };
+
             request.Id = Guid.NewGuid().GetHashCode();
+
+            return request;
+        }
+        
+        private async Task<InvokeState> CreateInvoke(MethodInfo targetMethod, object[] args)
+        {
+            var request = CreateRequest(targetMethod, args);
 
             var responseHandler = m_ResponseHandlers[targetMethod];
 
