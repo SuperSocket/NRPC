@@ -43,17 +43,35 @@ namespace NRPC.Test
         [Fact]
         public async Task TestAsyncMethodInvocation()
         {
-            // Skip test due to known issues with the current implementation
-            // Once CompiledServiceHandler is fully implemented, this test can be enabled
-            await Task.CompletedTask;
+            // Arrange
+            var service = new TestService();
+            var handler = new CompiledServiceHandler<TestService>();
+            var request = RpcRequest.Create(1, "AddAsync", 2, 3);
+            
+            // Act
+            var response = await handler.HandleRequestAsync(service, request);
+            
+            // Assert
+            Assert.NotNull(response);
+            Assert.Null(response.Error);
+            Assert.Equal(5, response.Result);
         }
 
         [Fact]
         public async Task TestVoidAsyncMethodInvocation()
         {
-            // Skip test due to known issues with the current implementation
-            // Once CompiledServiceHandler is fully implemented, this test can be enabled
-            await Task.CompletedTask;
+            // Arrange
+            var service = new TestService();
+            var handler = new CompiledServiceHandler<TestService>();
+            var request = RpcRequest.Create(1, "DoWorkAsync");
+            
+            // Act
+            var response = await handler.HandleRequestAsync(service, request);
+            
+            // Assert
+            Assert.NotNull(response);
+            Assert.Null(response.Error);
+            Assert.Null(response.Result);
         }
 
         [Fact]

@@ -130,20 +130,33 @@ namespace NRPC.Executor
 
             if (method.ReturnType.IsGenericType)
             {
-                // Create a lambda expression
-                var lambda = Expression.Lambda<Func<TService, object[], Task<TTaskResult>>>(
-                    Expression.Convert(methodCall, typeof(Task<TTaskResult>)),
+                // Get the generic type arguments
+                Type[] genericArgs = method.ReturnType.GetGenericArguments();
+                Type resultType = genericArgs[0];
+
+                // Create a lambda expression that calls the method
+                var lambda = Expression.Lambda<Func<TService, object[], Task>>(
+                    Expression.Convert(methodCall, typeof(Task)),
                     serviceParam,
                     argumentsParam
                 );
 
                 var compiledLambda = lambda.Compile();
 
-                // Create a wrapper that gets the Result property
+                // Create a wrapper that gets the result from the Task
                 return async (service, args) =>
                 {
-                    var result = await compiledLambda(service, args);
-                    return result;
+                    await compiledLambda(service, args);
+                    
+                    // Get the Result property dynamically using reflection
+                    var task = compiledLambda(service, args);
+                    var resultProperty = task.GetType().GetProperty("Result");
+                    
+                    // Wait for the task to complete
+                    await task;
+                    
+                    // Return the Result property value
+                    return resultProperty != null ? resultProperty.GetValue(task) : null;
                 };
             }
             else
