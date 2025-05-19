@@ -87,7 +87,9 @@ namespace NRPC.Executor
                 // Create a delegate for each method
                 Func<TService, object[], Task<object>> compiledMethod =
                     (Func<TService, object[], Task<object>>)compileMethod
-                        .MakeGenericMethod(method.ReturnType)
+                        .MakeGenericMethod(method.ReturnType.IsGenericType
+                            ? method.ReturnType.GenericTypeArguments[0]
+                            : typeof(object))
                         .Invoke(this, new object[] { method });
 
                 _compiledMethods[method.Name] = compiledMethod;
@@ -130,13 +132,9 @@ namespace NRPC.Executor
 
             if (method.ReturnType.IsGenericType)
             {
-                // Get the generic type arguments
-                Type[] genericArgs = method.ReturnType.GetGenericArguments();
-                Type resultType = genericArgs[0];
-
                 // Create a lambda expression that calls the method
-                var lambda = Expression.Lambda<Func<TService, object[], Task>>(
-                    Expression.Convert(methodCall, typeof(Task)),
+                var lambda = Expression.Lambda<Func<TService, object[], Task<TTaskResult>>>(
+                    Expression.Convert(methodCall, typeof(Task<TTaskResult>)),
                     serviceParam,
                     argumentsParam
                 );
@@ -146,17 +144,7 @@ namespace NRPC.Executor
                 // Create a wrapper that gets the result from the Task
                 return async (service, args) =>
                 {
-                    await compiledLambda(service, args);
-                    
-                    // Get the Result property dynamically using reflection
-                    var task = compiledLambda(service, args);
-                    var resultProperty = task.GetType().GetProperty("Result");
-                    
-                    // Wait for the task to complete
-                    await task;
-                    
-                    // Return the Result property value
-                    return resultProperty != null ? resultProperty.GetValue(task) : null;
+                    return await compiledLambda(service, args);
                 };
             }
             else
