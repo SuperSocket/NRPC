@@ -8,38 +8,6 @@ namespace NRPC.Test
 {
     public class CompiledServiceHandlerTest
     {
-        public interface ITestService
-        {
-            int Add(int a, int b);
-            string Concatenate(string a, string b);
-            Task<int> AddAsync(int a, int b);
-            Task DoWorkAsync();
-            void DoWork();
-        }
-
-        public class TestService : ITestService
-        {
-            public int Add(int a, int b) => a + b;
-
-            public string Concatenate(string a, string b) => a + b;
-
-            public async Task<int> AddAsync(int a, int b)
-            {
-                await Task.Delay(1); // Simulate async work
-                return a + b;
-            }
-
-            public async Task DoWorkAsync()
-            {
-                await Task.Delay(1); // Simulate async work
-            }
-
-            public void DoWork()
-            {
-                // Do nothing
-            }
-        }
-
         [Fact]
         public async Task TestAsyncMethodInvocation()
         {
