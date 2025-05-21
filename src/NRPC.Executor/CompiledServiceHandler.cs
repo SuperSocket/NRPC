@@ -14,13 +14,21 @@ namespace NRPC.Executor
     /// <typeparam name="TService">The type of service to handle</typeparam>
     public class CompiledServiceHandler<TService>
     {
+        private readonly IParameterConverter _parameterConverter;
+
         private readonly Dictionary<string, Func<TService, object[], Task<object>>> _compiledMethods;
+
+        public CompiledServiceHandler()
+            : this(new DirectTypeParameterConverter())
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the CompiledServiceHandler and pre-compiles all methods
         /// </summary>
-        public CompiledServiceHandler()
+        public CompiledServiceHandler(IParameterConverter parameterConverter)
         {
+            _parameterConverter = parameterConverter ?? throw new ArgumentNullException(nameof(parameterConverter));
             _compiledMethods = new Dictionary<string, Func<TService, object[], Task<object>>>(StringComparer.OrdinalIgnoreCase);
 
             // Pre-compile all public methods of the service
@@ -112,19 +120,7 @@ namespace NRPC.Executor
             {
                 // Get the argument from the arguments array
                 Expression argument = Expression.ArrayIndex(argumentsParam, Expression.Constant(i));
-
-                // Convert the argument to the parameter type
-                Type parameterType = parameters[i].ParameterType;
-                if (parameterType.IsByRef)
-                    parameterType = parameterType.GetElementType();
-
-                // Handle null values and type conversions
-                Expression typedArgument = Expression.Condition(
-                    Expression.Equal(argument, Expression.Constant(null)),
-                    Expression.Default(parameterType),
-                    Expression.Convert(argument, parameterType));
-
-                argumentExpressions[i] = typedArgument;
+                argumentExpressions[i] = _parameterConverter.Convert(argument, parameters[i]);
             }
 
             // Create the method call expression with the service instance

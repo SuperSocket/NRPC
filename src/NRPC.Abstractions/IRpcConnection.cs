@@ -11,8 +11,7 @@ namespace NRPC.Abstractions
     public interface IRpcConnection
     {
 
-        Task SendAsync(RpcRequest request);
-        
+        Task SendAsync(RpcRequest request);        
 
         Task<RpcResponse> ReceiveAsync(CancellationToken cancellationToken = default);
     }
