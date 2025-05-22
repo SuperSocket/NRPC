@@ -37,19 +37,19 @@ namespace NRPC.Test
 
             response.Id = request.Id;
 
-            if (request.MethodName == "Add")
+            if (request.Method == "Add")
             {
-                int x = (int)request.Arguments[0];
-                int y = (int)request.Arguments[1];
+                int x = (int)request.Parameters[0];
+                int y = (int)request.Parameters[1];
                 response.Result = x + y;
             }
-            else if (request.MethodName == "Concat")
+            else if (request.Method == "Concat")
             {
-                string x = (string)request.Arguments[0];
-                string y = (string)request.Arguments[1];
+                string x = (string)request.Parameters[0];
+                string y = (string)request.Parameters[1];
                 response.Result = x + y;
             }
-            else if (request.MethodName == "ExecuteVoid")
+            else if (request.Method == "ExecuteVoid")
             {
                 // No result for void
             }
@@ -108,10 +108,10 @@ namespace NRPC.Test
             
             // Assert
             Assert.NotNull(capturedRequest);
-            Assert.Equal("Add", capturedRequest.MethodName);
-            Assert.Equal(2, capturedRequest.Arguments.Length);
-            Assert.Equal(5, capturedRequest.Arguments[0]);
-            Assert.Equal(10, capturedRequest.Arguments[1]);
+            Assert.Equal("Add", capturedRequest.Method);
+            Assert.Equal(2, capturedRequest.Parameters.Length);
+            Assert.Equal(5, capturedRequest.Parameters[0]);
+            Assert.Equal(10, capturedRequest.Parameters[1]);
             Assert.Equal(15, result);
         }
 
@@ -133,10 +133,10 @@ namespace NRPC.Test
             
             // Assert
             Assert.NotNull(capturedRequest);
-            Assert.Equal("Concat", capturedRequest.MethodName);
-            Assert.Equal(2, capturedRequest.Arguments.Length);
-            Assert.Equal("Hello, ", capturedRequest.Arguments[0]);
-            Assert.Equal("World!", capturedRequest.Arguments[1]);
+            Assert.Equal("Concat", capturedRequest.Method);
+            Assert.Equal(2, capturedRequest.Parameters.Length);
+            Assert.Equal("Hello, ", capturedRequest.Parameters[0]);
+            Assert.Equal("World!", capturedRequest.Parameters[1]);
             Assert.Equal("Hello, World!", result);
         }
 
@@ -158,9 +158,9 @@ namespace NRPC.Test
             
             // Assert
             Assert.NotNull(capturedRequest);
-            Assert.Equal("ExecuteVoid", capturedRequest.MethodName);
-            Assert.Single(capturedRequest.Arguments);
-            Assert.Equal("test command", capturedRequest.Arguments[0]);
+            Assert.Equal("ExecuteVoid", capturedRequest.Method);
+            Assert.Single(capturedRequest.Parameters);
+            Assert.Equal("test command", capturedRequest.Parameters[0]);
         }
     }
 }

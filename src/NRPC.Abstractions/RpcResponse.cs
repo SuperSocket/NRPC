@@ -8,7 +8,7 @@ namespace NRPC.Abstractions
         /// <summary>
         /// The id of the result which is used for matching its invoke request
         /// </summary>
-        public int Id { get; set; }
+        public string Id { get; set; }
         
         /// <summary>
         /// The invoke result data

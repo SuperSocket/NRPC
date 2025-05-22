@@ -5,7 +5,7 @@ using NRPC.Abstractions;
 
 namespace NRPC.Executor
 {
-    public class DirectTypeParameterConverter : IParameterConverter
+    public class DirectTypeParameterExpressionConverter : IParameterExpressionConverter
     {
         public Expression Convert(Expression parameterExpression, ParameterInfo parameterInfo)
         {

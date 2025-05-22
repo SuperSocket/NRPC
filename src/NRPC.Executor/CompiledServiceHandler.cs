@@ -14,19 +14,19 @@ namespace NRPC.Executor
     /// <typeparam name="TService">The type of service to handle</typeparam>
     public class CompiledServiceHandler<TService>
     {
-        private readonly IParameterConverter _parameterConverter;
+        private readonly IParameterExpressionConverter _parameterConverter;
 
         private readonly Dictionary<string, Func<TService, object[], Task<object>>> _compiledMethods;
 
         public CompiledServiceHandler()
-            : this(new DirectTypeParameterConverter())
+            : this(new DirectTypeParameterExpressionConverter())
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the CompiledServiceHandler and pre-compiles all methods
         /// </summary>
-        public CompiledServiceHandler(IParameterConverter parameterConverter)
+        public CompiledServiceHandler(IParameterExpressionConverter parameterConverter)
         {
             _parameterConverter = parameterConverter ?? throw new ArgumentNullException(nameof(parameterConverter));
             _compiledMethods = new Dictionary<string, Func<TService, object[], Task<object>>>(StringComparer.OrdinalIgnoreCase);
@@ -48,17 +48,17 @@ namespace NRPC.Executor
 
             try
             {
-                if (!_compiledMethods.TryGetValue(request.MethodName, out var methodInvoker))
+                if (!_compiledMethods.TryGetValue(request.Method, out var methodInvoker))
                 {
                     return new RpcResponse
                     {
                         Id = request.Id,
-                        Error = new RpcError(404, $"Method '{request.MethodName}' not found on service {typeof(TService).Name}")
+                        Error = new RpcError(404, $"Method '{request.Method}' not found on service {typeof(TService).Name}")
                     };
                 }
 
                 // Invoke the pre-compiled method
-                object result = await methodInvoker(service, request.Arguments).ConfigureAwait(false);
+                object result = await methodInvoker(service, request.Parameters).ConfigureAwait(false);
 
                 return new RpcResponse
                 {

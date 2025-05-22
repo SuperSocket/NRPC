@@ -17,7 +17,7 @@ namespace NRPC.Client
 
         private IReadOnlyDictionary<MethodInfo, IResponseHandler> m_ResponseHandlers;
 
-        private ConcurrentDictionary<int, InvokeState> m_InvokeStates = new ConcurrentDictionary<int, InvokeState>();
+        private ConcurrentDictionary<string, InvokeState> m_InvokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
 
         private CancellationTokenSource m_ReadCancellationTokenSource = new CancellationTokenSource();
         
@@ -94,12 +94,11 @@ namespace NRPC.Client
         {
             var request = new RpcRequest
             {
-                MethodName = targetMethod.Name,
-                Arguments = args
+                Method = targetMethod.Name,
+                Parameters = args
             };
 
-            request.Id = Guid.NewGuid().GetHashCode();
-
+            request.Id = Guid.NewGuid().ToString();
             return request;
         }
         

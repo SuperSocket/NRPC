@@ -14,7 +14,7 @@ namespace NRPC.Test
             // Arrange
             var service = new TestService();
             var handler = new CompiledServiceHandler<TestService>();
-            var request = RpcRequest.Create(1, "Add", 2, 3);
+            var request = RpcRequest.Create("1", "Add", 2, 3);
             
             // Act
             var response = await handler.HandleRequestAsync(service, request);
@@ -31,7 +31,7 @@ namespace NRPC.Test
             // Arrange
             var service = new TestService();
             var handler = new CompiledServiceHandler<TestService>();
-            var request = RpcRequest.Create(1, "ExecuteVoid", new object[] { "command" });
+            var request = RpcRequest.Create("1", "ExecuteVoid", new object[] { "command" });
             
             // Act
             var response = await handler.HandleRequestAsync(service, request);
@@ -48,7 +48,7 @@ namespace NRPC.Test
             // Arrange
             var service = new TestService();
             var handler = new CompiledServiceHandler<TestService>();
-            var request = RpcRequest.Create(1, "Multiply", 2, 3);
+            var request = RpcRequest.Create("1", "Multiply", 2, 3);
 
             // Act
             var response = await handler.HandleRequestAsync(service, request);

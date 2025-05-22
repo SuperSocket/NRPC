@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace NRPC.Abstractions
 {
-    public interface IParameterConverter
+    public interface IParameterExpressionConverter
     {
         Expression Convert(Expression parameterExpression, ParameterInfo parameterInfo);
     }

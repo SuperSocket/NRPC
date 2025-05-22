@@ -13,8 +13,8 @@ namespace NRPC.Test
         public void TestRpcRequest()
         {
             var request = new RpcRequest();
-            request.MethodName = "Test";
-            request.Arguments = new object[] { 1, "3", 5.5 };
+            request.Method = "Test";
+            request.Parameters = new object[] { 1, "3", 5.5 };
         }
     }
 }

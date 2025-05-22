@@ -8,32 +8,32 @@ namespace NRPC.Abstractions
         /// <summary>
         ///  The id of the request
         /// </summary>
-        public int Id { get; set; }
+        public string Id { get; set; }
         
         /// <summary>
         /// The name of the method which supposed to handle the request
         /// </summary>
-        public string MethodName { get; set; }
+        public string Method { get; set; }
         
         /// <summary>
-        /// The request arguments
+        /// The request parameters.
         /// </summary>
-        public object[] Arguments { get; set; }
-        
+        public object[] Parameters { get; set; }
+
         /// <summary>
         /// Creates a new RPC request with the specified parameters
         /// </summary>
         /// <param name="id">The request ID</param>
-        /// <param name="methodName">The name of the method to call</param>
-        /// <param name="arguments">The arguments to pass to the method</param>
+        /// <param name="method">The name of the method to call</param>
+        /// <param name="parameters">The parameters to pass to the method</param>
         /// <returns>A new RpcRequest instance</returns>
-        public static RpcRequest Create(int id, string methodName, params object[] arguments)
+        public static RpcRequest Create(string id, string method, params object[] parameters)
         {
             return new RpcRequest
             {
                 Id = id,
-                MethodName = methodName,
-                Arguments = arguments
+                Method = method,
+                Parameters = parameters
             };
         }
     }
