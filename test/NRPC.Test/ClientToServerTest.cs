@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
+using NRPC.Abstractions.Metadata;
 using NRPC.Client;
 using NRPC.Executor;
 using Xunit;
@@ -17,7 +18,7 @@ namespace NRPC.Test
         {
             private readonly Channel<RpcResponse> _responses = Channel.CreateUnbounded<RpcResponse>();
 
-            private CompiledServiceHandler<ITestService> _handler = new CompiledServiceHandler<ITestService>();
+            private CompiledServiceHandler<ITestService> _handler = new CompiledServiceHandler<ITestService>(ServiceMetadata.Create<ITestService>());
 
             private ITestService _testService;
 

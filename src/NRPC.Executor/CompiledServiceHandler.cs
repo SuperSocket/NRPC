@@ -14,6 +14,11 @@ namespace NRPC.Executor
     {
         private readonly ServiceMetadata _serviceMetadata;
 
+        public CompiledServiceHandler()
+            : this(ServiceMetadata.Create<TService>())
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the CompiledServiceHandler and pre-compiles all methods
         /// </summary>
