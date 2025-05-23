@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace NRPC.Abstractions.Metadata
 {
@@ -18,12 +19,24 @@ namespace NRPC.Abstractions.Metadata
         /// <summary>
         /// Gets or sets the list of method metadata for the service.
         /// </summary>
-        public IReadOnlyList<MethodMetadata> Methods { get; }
+        public IReadOnlyDictionary<string, MethodMetadata> Methods { get; }
 
-        public ServiceMetadata(Type serviceType)
+        private ServiceMetadata(Type serviceType, IEnumerable<MethodMetadata> methods)
         {
             ServiceType = serviceType ?? throw new ArgumentNullException(nameof(serviceType));
-            Methods = serviceType.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Select(m => new MethodMetadata(m)).ToArray();
+            Methods = methods.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static ServiceMetadata Create<TService>()
+        {
+            var serviceType = typeof(TService);
+            var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => !m.IsSpecialName) // Exclude property accessors
+                .Where(m => typeof(Task).IsAssignableFrom(m.ReturnType)) // Only include async methods
+                .Select(m => new MethodMetadata<TService>(m))
+                .ToArray();
+
+            return new ServiceMetadata(serviceType, methods);
         }
     }
 }
