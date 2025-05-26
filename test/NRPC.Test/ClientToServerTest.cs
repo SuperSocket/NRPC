@@ -65,7 +65,7 @@ namespace NRPC.Test
         [Fact]
         public async Task TestBasicRpcWorkflow()
         {
-            var factory = new ProxyClientFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection()));
+            var factory = new RpcClientFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection()));
             var client = await factory.CreateClient();
 
             Assert.Equal(3, await client.Add(1, 2));
@@ -76,7 +76,7 @@ namespace NRPC.Test
         [Fact]
         public async Task TestRpcException()
         {
-            var factory = new ProxyClientFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection(new TestServiceWithException())));
+            var factory = new RpcClientFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection(new TestServiceWithException())));
             var client = await factory.CreateClient();
 
             var rpcException = await Assert.ThrowsAsync<RpcException>(async () => await client.ExecuteVoid("Test exception"));

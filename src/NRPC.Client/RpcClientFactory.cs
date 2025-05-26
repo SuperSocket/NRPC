@@ -4,12 +4,12 @@ using NRPC.Proxy;
 
 namespace NRPC.Client
 {
-    public class ProxyClientFactory<T, TClientDispatchProxy> : IClientFactory<T>
+    public class RpcClientFactory<T, TClientDispatchProxy> : IClientFactory<T>
         where TClientDispatchProxy : ClientDispatchProxy
     {
         private IRpcConnectionFactory m_ConnectionFactory;
 
-        public ProxyClientFactory(IRpcConnectionFactory connectionFactory)
+        public RpcClientFactory(IRpcConnectionFactory connectionFactory)
         {
             m_ConnectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         }
@@ -23,10 +23,10 @@ namespace NRPC.Client
         }
     }
 
-    public class ProxyClientFactory<T> : ProxyClientFactory<T, ClientDispatchProxy>
+    public class RpcClientFactory<T> : RpcClientFactory<T, ClientDispatchProxy>
         where T : class
     {
-        public ProxyClientFactory(IRpcConnectionFactory connectionFactory)
+        public RpcClientFactory(IRpcConnectionFactory connectionFactory)
             : base(connectionFactory)
         {
         }

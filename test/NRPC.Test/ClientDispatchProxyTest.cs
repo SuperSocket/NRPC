@@ -83,7 +83,7 @@ namespace NRPC.Test
         public void TestDispatchProxyCreation()
         {
             // Arrange
-            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
+            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
             // Act
             var client = clientFactory.CreateClient();
@@ -99,7 +99,7 @@ namespace NRPC.Test
             // Arrange
             RpcRequest capturedRequest = null;
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
-            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
             var client = await clientFactory.CreateClient();
@@ -123,7 +123,7 @@ namespace NRPC.Test
             
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
 
-            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
             var client = await clientFactory.CreateClient();
@@ -148,7 +148,7 @@ namespace NRPC.Test
             
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
 
-            var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
             var client = await clientFactory.CreateClient();
