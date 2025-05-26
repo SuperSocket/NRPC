@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace NRPC.Client
 {
     public interface IClientFactory
@@ -6,6 +8,6 @@ namespace NRPC.Client
     
     public interface IClientFactory<T> : IClientFactory
     {
-        T CreateClient();
+        Task<T> CreateClient();
     }
 }

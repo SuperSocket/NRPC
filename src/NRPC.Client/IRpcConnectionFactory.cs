@@ -1,9 +1,10 @@
+using System.Threading.Tasks;
 using NRPC.Abstractions;
 
 namespace NRPC.Client
 {
     public interface IRpcConnectionFactory
     {
-        IRpcConnection CreateConnection();
+        Task<IRpcConnection> CreateConnection();
     }
 }

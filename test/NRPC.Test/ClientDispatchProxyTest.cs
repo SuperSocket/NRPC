@@ -71,9 +71,9 @@ namespace NRPC.Test
             this.mockRpcConnection = mockRpcConnection;
         }
 
-        public IRpcConnection CreateConnection()
+        public Task<IRpcConnection> CreateConnection()
         {
-            return mockRpcConnection;
+            return Task.FromResult<IRpcConnection>(mockRpcConnection);
         }
     }
 
@@ -102,7 +102,7 @@ namespace NRPC.Test
             var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = clientFactory.CreateClient();
+            var client = await clientFactory.CreateClient();
             // Invoke the method
             var result = await client.Add(5, 10);
             
@@ -126,7 +126,7 @@ namespace NRPC.Test
             var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = clientFactory.CreateClient();
+            var client = await clientFactory.CreateClient();
 
             // Invoke the method
             var result = await client.Concat("Hello, ", "World!");
@@ -151,7 +151,7 @@ namespace NRPC.Test
             var clientFactory = new ProxyClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = clientFactory.CreateClient();
+            var client = await clientFactory.CreateClient();
             
             // Invoke the void method
             await client.ExecuteVoid("test command");
