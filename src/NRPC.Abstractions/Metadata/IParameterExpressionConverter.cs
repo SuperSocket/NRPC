@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace NRPC.Abstractions
+namespace NRPC.Abstractions.Metadata
 {
     public interface IParameterExpressionConverter
     {

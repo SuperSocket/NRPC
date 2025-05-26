@@ -27,13 +27,16 @@ namespace NRPC.Abstractions.Metadata
             Methods = methods.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
         }
 
-        public static ServiceMetadata Create<TService>()
+        public static ServiceMetadata Create<TService>(IParameterExpressionConverter parameterExpressionConverter = null)
         {
+            if (parameterExpressionConverter == null)
+                parameterExpressionConverter = DirectTypeParameterExpressionConverter.Singleton;
+
             var serviceType = typeof(TService);
             var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Where(m => !m.IsSpecialName) // Exclude property accessors
                 .Where(m => typeof(Task).IsAssignableFrom(m.ReturnType)) // Only include async methods
-                .Select(m => new MethodMetadata<TService>(m))
+                .Select(m => new MethodMetadata<TService>(m, parameterExpressionConverter))
                 .ToArray();
 
             return new ServiceMetadata(serviceType, methods);

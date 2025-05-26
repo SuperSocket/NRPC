@@ -1,15 +1,19 @@
-using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using NRPC.Abstractions;
 
-namespace NRPC.Executor
+namespace NRPC.Abstractions.Metadata
 {
-    public class DirectTypeParameterExpressionConverter : IParameterExpressionConverter
+    class DirectTypeParameterExpressionConverter : IParameterExpressionConverter
     {
+        public static DirectTypeParameterExpressionConverter Singleton { get; } = new DirectTypeParameterExpressionConverter();
+
+        private DirectTypeParameterExpressionConverter()
+        {
+        }
+
         public Expression Convert(Expression parameterExpression, ParameterInfo parameterInfo)
         {
-            Type parameterType = parameterInfo.ParameterType;
+            var parameterType = parameterInfo.ParameterType;
             if (parameterType.IsByRef)
                 parameterType = parameterType.GetElementType();
 
