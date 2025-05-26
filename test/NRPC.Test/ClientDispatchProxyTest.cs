@@ -80,13 +80,13 @@ namespace NRPC.Test
     public class ClientDispatchProxyTest
     {
         [Fact]
-        public void TestDispatchProxyCreation()
+        public async Task TestDispatchProxyCreation()
         {
             // Arrange
             var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
             // Act
-            var client = clientFactory.CreateClient();
+            var client = await clientFactory.CreateClient();
             
             // Assert
             Assert.NotNull(client);
