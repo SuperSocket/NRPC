@@ -1,11 +1,8 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <SuperSocketVersion>2.0.0</SuperSocketVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="SuperSocket.ProtoBase" Version="$(SuperSocketVersion)" />
-    <PackageVersion Include="SuperSocket.Connection" Version="$(SuperSocketVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.2" />
