@@ -15,6 +15,8 @@ namespace NRPC.Client
     {        
         private IRpcConnection m_RpcConnection;
 
+        private IRpcCallingAdapter m_RpcCallingAdapter;
+
         private IReadOnlyDictionary<MethodInfo, IResponseHandler> m_ResponseHandlers;
 
         private ConcurrentDictionary<string, InvokeState> m_InvokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
@@ -25,9 +27,11 @@ namespace NRPC.Client
         {
         }
 
-        internal void Initialize(IRpcConnection rpcConnection)
+        internal void Initialize(IRpcConnection rpcConnection, IRpcCallingAdapter rpcCallingAdapter)
         {
-            m_RpcConnection = rpcConnection;
+            m_RpcConnection = rpcConnection ?? throw new ArgumentNullException(nameof(rpcConnection));
+            m_RpcCallingAdapter = rpcCallingAdapter ?? throw new ArgumentNullException(nameof(rpcCallingAdapter));
+            
             InitializeResponseHanders();
             StartReadResponse();
         }
@@ -90,15 +94,14 @@ namespace NRPC.Client
             }                
         }
         
-        protected virtual RpcRequest CreateRequest(MethodInfo targetMethod, object[] args)
+        private RpcRequest CreateRequest(MethodInfo targetMethod, object[] args)
         {
-            var request = new RpcRequest
-            {
-                Method = targetMethod.Name,
-                Parameters = args
-            };
+            var request = m_RpcCallingAdapter.CreateRequest();
 
+            request.Method = targetMethod.Name;
+            request.Parameters = args;
             request.Id = Guid.NewGuid().ToString();
+            
             return request;
         }
         
