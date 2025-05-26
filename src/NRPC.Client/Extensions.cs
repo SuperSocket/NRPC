@@ -12,7 +12,7 @@ namespace NRPC.Client
             if(!typeof(T).GetTypeInfo().IsInterface)
                 throw new ArgumentException("The type argument must be an interface", nameof(T));
 
-            var proxyType = ClientDispatchProxy.GetPorxyType<T, ClientDispatchProxy>();
+            var proxyType = CallerDispatchProxy.GetPorxyType<T, CallerDispatchProxy>();
 
             return services.AddTransient(typeof(T), proxyType);
         }

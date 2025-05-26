@@ -11,7 +11,7 @@ using NRPC.Proxy;
 
 namespace NRPC.Client
 {
-    public class ClientDispatchProxy : RpcProxy, IDisposable
+    public class CallerDispatchProxy : RpcProxy, IDisposable
     {        
         private IRpcConnection m_RpcConnection;
 
@@ -23,7 +23,7 @@ namespace NRPC.Client
 
         private CancellationTokenSource m_ReadCancellationTokenSource = new CancellationTokenSource();
         
-        public ClientDispatchProxy()
+        public CallerDispatchProxy()
         {
         }
 

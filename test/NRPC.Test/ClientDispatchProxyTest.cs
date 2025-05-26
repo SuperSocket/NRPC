@@ -83,10 +83,10 @@ namespace NRPC.Test
         public async Task TestDispatchProxyCreation()
         {
             // Arrange
-            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
+            var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
             // Act
-            var client = await clientFactory.CreateClient();
+            var client = await clientFactory.CreateCaller();
             
             // Assert
             Assert.NotNull(client);
@@ -99,10 +99,10 @@ namespace NRPC.Test
             // Arrange
             RpcRequest capturedRequest = null;
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
-            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+            var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateClient();
+            var client = await clientFactory.CreateCaller();
             // Invoke the method
             var result = await client.Add(5, 10);
             
@@ -123,10 +123,10 @@ namespace NRPC.Test
             
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
 
-            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+            var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateClient();
+            var client = await clientFactory.CreateCaller();
 
             // Invoke the method
             var result = await client.Concat("Hello, ", "World!");
@@ -148,10 +148,10 @@ namespace NRPC.Test
             
             var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
 
-            var clientFactory = new RpcClientFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
+            var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateClient();
+            var client = await clientFactory.CreateCaller();
             
             // Invoke the void method
             await client.ExecuteVoid("test command");
