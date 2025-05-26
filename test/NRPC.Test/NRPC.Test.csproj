@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/NRPC.Client/NRPC.Client.csproj" />
+    <ProjectReference Include="../../src/NRPC.Caller/NRPC.Caller.csproj" />
     <ProjectReference Include="../../src/NRPC.Executor/NRPC.Executor.csproj" />
   </ItemGroup>
 

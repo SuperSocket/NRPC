@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using NRPC.Abstractions;
-using NRPC.Client;
 using Xunit;
 
 namespace NRPC.Test

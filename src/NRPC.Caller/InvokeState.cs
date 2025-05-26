@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     class InvokeState
     {

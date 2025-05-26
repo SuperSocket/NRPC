@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NRPC.Abstractions;
 using NRPC.Proxy;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     public class CallerDispatchProxy : RpcProxy, IDisposable
     {        

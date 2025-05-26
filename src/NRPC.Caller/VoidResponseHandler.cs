@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     class VoidResponseHandler : TypedResponseHandler<object>
     {

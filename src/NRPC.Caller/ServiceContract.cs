@@ -1,6 +1,6 @@
 using System;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     /// <summary>
     /// Indicates that the class is a service contract.

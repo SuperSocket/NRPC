@@ -1,4 +1,4 @@
-using NRPC.Client;
+using NRPC.Caller;
 
 namespace NRPC.Test;
 

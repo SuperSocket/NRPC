@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NRPC.Abstractions;
-using NRPC.Client;
+using NRPC.Caller;
 using Xunit;
 using System.Collections.Generic;
 using System.Threading.Channels;

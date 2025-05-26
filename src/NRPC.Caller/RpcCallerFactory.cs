@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using NRPC.Abstractions;
 using NRPC.Proxy;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     public class RpcCallerFactory<T, TClientDispatchProxy> : ICallerFactory<T>
         where TClientDispatchProxy : CallerDispatchProxy

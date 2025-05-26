@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     public static class Extensions
     {

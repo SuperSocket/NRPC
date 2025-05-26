@@ -1,7 +1,7 @@
 using System;
 using NRPC.Abstractions;
 
-namespace NRPC.Client
+namespace NRPC.Caller
 {
     public class RpcException : Exception
     {

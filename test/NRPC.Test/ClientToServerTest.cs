@@ -5,7 +5,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 using NRPC.Abstractions.Metadata;
-using NRPC.Client;
+using NRPC.Caller;
 using NRPC.Executor;
 using Xunit;
 
