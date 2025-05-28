@@ -14,17 +14,25 @@ namespace NRPC.Executor
     {
         private readonly ServiceMetadata _serviceMetadata;
 
+        private readonly IRpcCallingAdapter _rpcCallingAdapter;
+
         public CompiledServiceHandler()
-            : this(ServiceMetadata.Create<TService>())
+            : this(ServiceMetadata.Create<TService>(), DefaultRpcCallingAdapter.Singleton)
+        {
+        }
+
+        public CompiledServiceHandler(ServiceMetadata serviceMetadata)
+            : this(serviceMetadata, DefaultRpcCallingAdapter.Singleton)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the CompiledServiceHandler and pre-compiles all methods
         /// </summary>
-        public CompiledServiceHandler(ServiceMetadata serviceMetadata)
+        public CompiledServiceHandler(ServiceMetadata serviceMetadata, IRpcCallingAdapter rpcCallingAdapter)
         {
             _serviceMetadata = serviceMetadata ?? throw new ArgumentNullException(nameof(serviceMetadata));
+            _rpcCallingAdapter = rpcCallingAdapter ?? throw new ArgumentNullException(nameof(rpcCallingAdapter));
         }
 
         /// <summary>
@@ -38,15 +46,15 @@ namespace NRPC.Executor
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            var response = _rpcCallingAdapter.CreateResponse();
+            response.Id = request.Id;
+
             try
             {
                 if (!_serviceMetadata.Methods.TryGetValue(request.Method, out var methodMetadata))
                 {
-                    return new RpcResponse
-                    {
-                        Id = request.Id,
-                        Error = new RpcError(404, $"Method '{request.Method}' not found on service {typeof(TService).Name}")
-                    };
+                    response.Error = new RpcError(404, $"Method '{request.Method}' not found on service {typeof(TService).Name}");
+                    return response;
                 }
 
                 var serviceMethodMetadata = methodMetadata as MethodMetadata<TService>;
@@ -54,11 +62,10 @@ namespace NRPC.Executor
                 // Invoke the pre-compiled method
                 object result = await serviceMethodMetadata.Caller(service, request.Parameters).ConfigureAwait(false);
 
-                return new RpcResponse
-                {
-                    Id = request.Id,
-                    Result = result
-                };
+                response.Id = request.Id;
+                response.Result = result;
+
+                return response;
             }
             catch (Exception ex)
             {
@@ -66,11 +73,9 @@ namespace NRPC.Executor
                 if (ex is TargetInvocationException tie)
                     ex = tie.InnerException ?? tie;
 
-                return new RpcResponse
-                {
-                    Id = request.Id,
-                    Error = new RpcError(500, ex.Message)
-                };
+                response.Error = new RpcError(500, ex.Message);
+
+                return response;
             }
         }
     }
