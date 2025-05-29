@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NRPC.Abstractions;
+using NRPC.Abstractions.Metadata;
 using NRPC.Proxy;
 
 namespace NRPC.Caller
@@ -17,6 +18,8 @@ namespace NRPC.Caller
 
         private IRpcCallingAdapter m_RpcCallingAdapter;
 
+        private IExpressionConverter m_ResultExpressionConverter;
+        
         private IReadOnlyDictionary<MethodInfo, IResponseHandler> m_ResponseHandlers;
 
         private ConcurrentDictionary<string, InvokeState> m_InvokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
@@ -27,11 +30,12 @@ namespace NRPC.Caller
         {
         }
 
-        internal void Initialize(IRpcConnection rpcConnection, IRpcCallingAdapter rpcCallingAdapter)
+        internal void Initialize(IRpcConnection rpcConnection, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter resultExpressionConverter)
         {
             m_RpcConnection = rpcConnection ?? throw new ArgumentNullException(nameof(rpcConnection));
             m_RpcCallingAdapter = rpcCallingAdapter ?? throw new ArgumentNullException(nameof(rpcCallingAdapter));
-            
+            m_ResultExpressionConverter = resultExpressionConverter ?? throw new ArgumentNullException(nameof(resultExpressionConverter));
+
             InitializeResponseHanders();
             StartReadResponse();
         }
@@ -56,7 +60,9 @@ namespace NRPC.Caller
             else if (methodInfo.ReturnType.IsGenericType && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
             {
                 var genericArgument = methodInfo.ReturnType.GenericTypeArguments[0];
-                return Activator.CreateInstance(typeof(TypedResponseHandler<>).MakeGenericType(genericArgument)) as IResponseHandler;
+                var responseHandler = Activator.CreateInstance(typeof(TypedResponseHandler<>).MakeGenericType(genericArgument)) as ITypedResponseHandler;
+                responseHandler.Initialize(m_ResultExpressionConverter);
+                return responseHandler;
             }
             else
             {

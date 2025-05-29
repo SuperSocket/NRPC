@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace NRPC.Abstractions.Metadata
 {
-    class DirectTypeExpressionConverter : IExpressionConverter
+    public class DirectTypeExpressionConverter : IExpressionConverter
     {
         public static DirectTypeExpressionConverter Singleton { get; } = new DirectTypeExpressionConverter();
 

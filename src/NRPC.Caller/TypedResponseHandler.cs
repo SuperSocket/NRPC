@@ -1,11 +1,23 @@
 using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
+using NRPC.Abstractions.Metadata;
 
 namespace NRPC.Caller
 {
-    class TypedResponseHandler<T> : IResponseHandler
+    class TypedResponseHandler<T> : IResponseHandler, ITypedResponseHandler
     {
+        private Func<object, T> _resultConverter;
+
+        public void Initialize(IExpressionConverter expressionConverter)
+        {
+            var parameterExpression = Expression.Parameter(typeof(object), "result");
+            var convertedExpression = expressionConverter.Convert(parameterExpression, typeof(T));
+
+            _resultConverter = Expression.Lambda<Func<object, T>>(convertedExpression, parameterExpression).Compile();
+        }
+
         public object CreateTaskCompletionSource()
         {
             return new TaskCompletionSource<T>();
@@ -26,7 +38,7 @@ namespace NRPC.Caller
                 return;
             }
 
-            tcs.SetResult((T)response.Result);
+            tcs.SetResult(_resultConverter(response.Result));
         }
 
         public void SetConnectionError(object taskCompletionSource, Exception exception)
