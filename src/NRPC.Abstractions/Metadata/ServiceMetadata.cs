@@ -27,10 +27,10 @@ namespace NRPC.Abstractions.Metadata
             Methods = methods.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
         }
 
-        public static ServiceMetadata Create<TService>(IParameterExpressionConverter parameterExpressionConverter = null)
+        public static ServiceMetadata Create<TService>(IExpressionConverter parameterExpressionConverter = null)
         {
             if (parameterExpressionConverter == null)
-                parameterExpressionConverter = DirectTypeParameterExpressionConverter.Singleton;
+                parameterExpressionConverter = DirectTypeExpressionConverter.Singleton;
 
             var serviceType = typeof(TService);
             var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance)

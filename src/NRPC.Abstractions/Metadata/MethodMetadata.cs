@@ -30,17 +30,17 @@ namespace NRPC.Abstractions.Metadata
     {
         public Func<TService, object[], Task<object>> Caller { get; }
 
-        private readonly IParameterExpressionConverter _parameterExpressionConverter;
+        private readonly IExpressionConverter _expressionConverter;
 
         public MethodMetadata(MethodInfo methodInfo)
-            : this(methodInfo, DirectTypeParameterExpressionConverter.Singleton)
+            : this(methodInfo, DirectTypeExpressionConverter.Singleton)
         {
         }
 
-        public MethodMetadata(MethodInfo methodInfo, IParameterExpressionConverter parameterConverter)
+        public MethodMetadata(MethodInfo methodInfo, IExpressionConverter expressionConverter)
             : base(methodInfo)
         {
-            _parameterExpressionConverter = parameterConverter ?? throw new ArgumentNullException(nameof(parameterConverter));
+            _expressionConverter = expressionConverter ?? throw new ArgumentNullException(nameof(expressionConverter));
 
             var compiledCallerMethod = this.GetType()
                 .GetMethod(nameof(CompileCaller), BindingFlags.NonPublic | BindingFlags.Instance);
@@ -66,9 +66,13 @@ namespace NRPC.Abstractions.Metadata
 
             for (int i = 0; i < parameters.Length; i++)
             {
+                var parameterType = parameters[i].ParameterType;
+                if (parameterType.IsByRef)
+                    parameterType = parameterType.GetElementType();
+
                 // Get the argument from the arguments array
                 Expression argument = Expression.ArrayIndex(argumentsParam, Expression.Constant(i));
-                argumentExpressions[i] = _parameterExpressionConverter.Convert(argument, parameters[i]);
+                argumentExpressions[i] = _expressionConverter.Convert(argument, parameterType);
             }
 
             // Create the method call expression with the service instance
@@ -107,8 +111,6 @@ namespace NRPC.Abstractions.Metadata
                     return null;
                 };
             }
-        }
-
-        
+        }        
     }
 }
