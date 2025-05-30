@@ -5,12 +5,14 @@ namespace NRPC.Caller
 {
     public class RpcException : Exception
     {
-        public RpcError ServerError { get; }
-
-        public RpcException(string message, RpcError serverError)
+        public RpcException(string message)
             : base(message)
         {
-            this.ServerError = serverError;
+        }
+
+        public RpcException(string message, Exception exception)
+            : base(message, exception)
+        {
         }
     }
 }

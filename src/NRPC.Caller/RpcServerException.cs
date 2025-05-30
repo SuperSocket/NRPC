@@ -9,9 +9,12 @@ namespace NRPC.Caller
     public class RpcServerException
         : RpcException
     {
+        public RpcError ServerError { get; }
+
         public RpcServerException(string message, RpcError serverError)
-            : base(message, serverError)
+            : base(message)
         {
+            ServerError = serverError;
         }
     }
 }

@@ -44,7 +44,7 @@ namespace NRPC.Caller
             }
             catch (Exception ex)
             {
-                tcs.SetException(new RpcClientException("Error converting response result.", new RpcError(500, ex.Message, response.Result)));
+                tcs.SetException(new RpcClientException("Error converting response result: " + response.Result, ex));
             }
         }
 

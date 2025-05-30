@@ -5,8 +5,8 @@ namespace NRPC.Caller
 {
     public class RpcClientException : RpcException
     {
-        public RpcClientException(string message, RpcError serverError)
-            : base(message, serverError)
+        public RpcClientException(string message, Exception exception)
+            : base(message, exception)    
         {
         }
     }
