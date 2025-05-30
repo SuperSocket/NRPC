@@ -12,7 +12,7 @@ namespace NRPC.Caller
 
             if (response.Error != null)
             {
-                tcs.SetException(new RpcException("Server side error.", response.Error));
+                tcs.SetException(new RpcServerException("Server side error.", response.Error));
             }
             else
             {

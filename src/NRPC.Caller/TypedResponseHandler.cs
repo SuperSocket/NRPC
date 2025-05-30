@@ -34,11 +34,18 @@ namespace NRPC.Caller
 
             if (response.Error != null)
             {
-                tcs.SetException(new RpcException("Server side error.", response.Error));
+                tcs.SetException(new RpcServerException("Server side error.", response.Error));
                 return;
             }
 
-            tcs.SetResult(_resultConverter(response.Result));
+            try
+            {
+                tcs.SetResult(_resultConverter(response.Result));
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(new RpcClientException("Error converting response result.", new RpcError(500, ex.Message, response.Result)));
+            }
         }
 
         public void SetConnectionError(object taskCompletionSource, Exception exception)

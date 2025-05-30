@@ -79,7 +79,7 @@ namespace NRPC.Test
             var factory = new RpcCallerFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection(new TestServiceWithException())));
             var client = await factory.CreateCaller();
 
-            var rpcException = await Assert.ThrowsAsync<RpcException>(async () => await client.ExecuteVoid("Test exception"));
+            var rpcException = await Assert.ThrowsAsync<RpcServerException>(async () => await client.ExecuteVoid("Test exception"));
             Assert.NotNull(rpcException.ServerError);
             Assert.Equal(500, rpcException.ServerError.Code);
             Assert.Equal("Test exception", rpcException.ServerError.Message);
