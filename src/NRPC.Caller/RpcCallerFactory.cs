@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 using NRPC.Abstractions.Metadata;
@@ -22,10 +23,10 @@ namespace NRPC.Caller
             m_ResultExpressionConverter = expressionConverter ?? throw new ArgumentNullException(nameof(expressionConverter));
         }
 
-        public async Task<T> CreateCaller()
+        public async Task<T> CreateCaller(CancellationToken cancellationToken)
         {
             var proxyInstance = RpcProxy.Create<T, TClientDispatchProxy>();
-            var rpcConnection = await m_ConnectionFactory.CreateConnection();
+            var rpcConnection = await m_ConnectionFactory.CreateConnection(cancellationToken).ConfigureAwait(false);
             (proxyInstance as CallerDispatchProxy).Initialize(rpcConnection, m_RpcCallingAdapter, m_ResultExpressionConverter);
             return (T)proxyInstance;
         }

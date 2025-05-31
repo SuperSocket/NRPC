@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 
@@ -9,6 +10,6 @@ namespace NRPC.Caller
     
     public interface ICallerFactory<T> : ICallerFactory
     {
-        Task<T> CreateCaller();
+        Task<T> CreateCaller(CancellationToken cancellationToken = default);
     }
 }
