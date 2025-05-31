@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="SuperSocket.Server.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NRPC.Executor/NRPC.Executor.csproj" />
+  </ItemGroup>
+</Project>
