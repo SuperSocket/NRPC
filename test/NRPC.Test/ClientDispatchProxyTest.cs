@@ -71,7 +71,7 @@ namespace NRPC.Test
             this.mockRpcConnection = mockRpcConnection;
         }
 
-        public Task<IRpcConnection> CreateConnection()
+        public Task<IRpcConnection> CreateConnection(CancellationToken cancellationToken)
         {
             return Task.FromResult<IRpcConnection>(mockRpcConnection);
         }
@@ -86,7 +86,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
             // Act
-            var client = await clientFactory.CreateCaller();
+            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             
             // Assert
             Assert.NotNull(client);
@@ -102,7 +102,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateCaller();
+            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             // Invoke the method
             var result = await client.Add(5, 10);
             
@@ -126,7 +126,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateCaller();
+            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
 
             // Invoke the method
             var result = await client.Concat("Hello, ", "World!");
@@ -151,7 +151,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateCaller();
+            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             
             // Invoke the void method
             await client.ExecuteVoid("test command");
