@@ -17,15 +17,9 @@ namespace NRPC.Executor
 
         private readonly IRpcCallingAdapter _rpcCallingAdapter;
 
-        public CompiledServiceHandler()
-            : this(ServiceMetadata.Create<TService>(), DefaultRpcCallingAdapter.Singleton)
-        {
-        }
-
         /// <summary>
         /// Initializes a new instance of the CompiledServiceHandler and pre-compiles all methods
         /// </summary>
-        [ActivatorUtilitiesConstructor()]
         public CompiledServiceHandler(ServiceMetadata serviceMetadata, IRpcCallingAdapter rpcCallingAdapter)
         {
             _serviceMetadata = serviceMetadata ?? throw new ArgumentNullException(nameof(serviceMetadata));

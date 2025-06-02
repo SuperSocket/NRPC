@@ -9,7 +9,7 @@ namespace NRPC.Abstractions.Metadata
     /// <summary>
     /// Represents metadata information about a service.
     /// </summary>
-    public class ServiceMetadata
+    public abstract class ServiceMetadata
     {
         /// <summary>
         /// Gets or sets the service type.
@@ -21,25 +21,27 @@ namespace NRPC.Abstractions.Metadata
         /// </summary>
         public IReadOnlyDictionary<string, MethodMetadata> Methods { get; }
 
-        private ServiceMetadata(Type serviceType, IEnumerable<MethodMetadata> methods)
+        protected ServiceMetadata(Type serviceType, IEnumerable<MethodMetadata> methods)
         {
             ServiceType = serviceType ?? throw new ArgumentNullException(nameof(serviceType));
             Methods = methods.ToDictionary(m => m.Name, StringComparer.OrdinalIgnoreCase);
         }
+    }
 
-        public static ServiceMetadata Create<TService>(IExpressionConverter parameterExpressionConverter = null)
+    public class ServiceMetadata<TServiceContract> : ServiceMetadata
+    {
+        public ServiceMetadata(IExpressionConverter parameterExpressionConverter)
+            : base(typeof(TServiceContract), CreateMethodMetadatas(parameterExpressionConverter))
         {
-            if (parameterExpressionConverter == null)
-                parameterExpressionConverter = DirectTypeExpressionConverter.Singleton;
+        }
 
-            var serviceType = typeof(TService);
-            var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+        private static IEnumerable<MethodMetadata> CreateMethodMetadatas(IExpressionConverter parameterExpressionConverter)
+        {
+            return typeof(TServiceContract).GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Where(m => !m.IsSpecialName) // Exclude property accessors
                 .Where(m => typeof(Task).IsAssignableFrom(m.ReturnType)) // Only include async methods
-                .Select(m => new MethodMetadata<TService>(m, parameterExpressionConverter))
+                .Select(m => new MethodMetadata<TServiceContract>(m, parameterExpressionConverter))
                 .ToArray();
-
-            return new ServiceMetadata(serviceType, methods);
         }
     }
 }

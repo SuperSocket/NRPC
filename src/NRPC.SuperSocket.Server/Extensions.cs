@@ -24,8 +24,9 @@ namespace NRPC.SuperSocket.Server
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<TServiceContract, TService>();
-                    services.TryAddSingleton<ServiceMetadata>(sp => ServiceMetadata.Create<TServiceContract>());
-                    services.TryAddSingleton<IRpcCallingAdapter>(DefaultRpcCallingAdapter.Singleton); 
+                    services.TryAddSingleton<IExpressionConverter, DirectTypeExpressionConverter>();
+                    services.TryAddSingleton<ServiceMetadata, ServiceMetadata<TServiceContract>>();
+                    services.TryAddSingleton<IRpcCallingAdapter>(DefaultRpcCallingAdapter.Singleton);
                     services.TryAddSingleton<CompiledServiceHandler<TServiceContract>>();
                     services.AddSingleton<IPackageHandler<TRpcRequest>, RpcPackageHandler<TServiceContract, TRpcRequest, TRpcResponse>>();
                 });

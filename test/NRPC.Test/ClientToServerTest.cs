@@ -8,6 +8,7 @@ using NRPC.Abstractions.Metadata;
 using NRPC.Caller;
 using NRPC.Executor;
 using Xunit;
+using Xunit.Sdk;
 
 namespace NRPC.Test
 {
@@ -18,7 +19,7 @@ namespace NRPC.Test
         {
             private readonly Channel<RpcResponse> _responses = Channel.CreateUnbounded<RpcResponse>();
 
-            private CompiledServiceHandler<ITestService> _handler = new CompiledServiceHandler<ITestService>();
+            private CompiledServiceHandler<ITestService> _handler = new CompiledServiceHandler<ITestService>(new ServiceMetadata<ITestService>(DirectTypeExpressionConverter.Singleton), DefaultRpcCallingAdapter.Singleton);
 
             private ITestService _testService;
 

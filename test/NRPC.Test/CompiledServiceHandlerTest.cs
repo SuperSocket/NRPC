@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
+using NRPC.Abstractions.Metadata;
 using NRPC.Executor;
 using Xunit;
 
@@ -13,7 +14,7 @@ namespace NRPC.Test
         {
             // Arrange
             var service = new TestService();
-            var handler = new CompiledServiceHandler<TestService>();
+            var handler = new CompiledServiceHandler<ITestService>(new ServiceMetadata<ITestService>(DirectTypeExpressionConverter.Singleton), DefaultRpcCallingAdapter.Singleton);
             var request = RpcRequest.Create("1", "Add", 2, 3);
             
             // Act
@@ -30,7 +31,7 @@ namespace NRPC.Test
         {
             // Arrange
             var service = new TestService();
-            var handler = new CompiledServiceHandler<TestService>();
+            var handler = new CompiledServiceHandler<ITestService>(new ServiceMetadata<ITestService>(DirectTypeExpressionConverter.Singleton), DefaultRpcCallingAdapter.Singleton);
             var request = RpcRequest.Create("1", "ExecuteVoid", new object[] { "command" });
             
             // Act
@@ -47,7 +48,7 @@ namespace NRPC.Test
         {
             // Arrange
             var service = new TestService();
-            var handler = new CompiledServiceHandler<TestService>();
+            var handler = new CompiledServiceHandler<ITestService>(new ServiceMetadata<ITestService>(DirectTypeExpressionConverter.Singleton), DefaultRpcCallingAdapter.Singleton);
             var request = RpcRequest.Create("1", "Multiply", 2, 3);
 
             // Act
