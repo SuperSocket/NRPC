@@ -1,5 +1,9 @@
 # NRPC (No RPC)
 
+[![build](https://github.com/SuperSocket/NRPC/actions/workflows/build.yaml/badge.svg)](https://github.com/SuperSocket/NRPC/actions/workflows/build.yaml)
+[![NuGet Version](https://img.shields.io/nuget/vpre/NRPC.Abstractions.svg?style=flat)](https://www.nuget.org/packages/NRPC.Abstractions/)
+[![NuGet Download](https://img.shields.io/nuget/dt/NRPC.Abstractions.svg?style=flat)](https://www.nuget.org/packages/NRPC.Abstractions/)
+
 NRPC is a .NET library that provides RPC-like programming interfaces using message queue services or other distributed communication facilities. It allows you to create distributed applications with clean service interfaces while abstracting away the underlying communication mechanisms.
 
 ## Overview
