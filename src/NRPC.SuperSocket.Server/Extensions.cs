@@ -1,7 +1,9 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NRPC.Abstractions;
+using NRPC.Abstractions.Metadata;
 using NRPC.Executor;
 using SuperSocket;
 using SuperSocket.Server.Abstractions;
@@ -22,8 +24,9 @@ namespace NRPC.SuperSocket.Server
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton<TServiceContract, TService>();
-                    services.AddSingleton<CompiledServiceHandler<TServiceContract>>();
-                    services.AddSingleton<IRpcCallingAdapter>(DefaultRpcCallingAdapter.Singleton);
+                    services.TryAddSingleton<ServiceMetadata>(sp => ServiceMetadata.Create<TServiceContract>());
+                    services.TryAddSingleton<IRpcCallingAdapter>(DefaultRpcCallingAdapter.Singleton); 
+                    services.TryAddSingleton<CompiledServiceHandler<TServiceContract>>();
                     services.AddSingleton<IPackageHandler<TRpcRequest>, RpcPackageHandler<TServiceContract, TRpcRequest, TRpcResponse>>();
                 });
         }

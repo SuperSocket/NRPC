@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using NRPC.Abstractions;
 using NRPC.Abstractions.Metadata;
 
@@ -21,14 +22,10 @@ namespace NRPC.Executor
         {
         }
 
-        public CompiledServiceHandler(ServiceMetadata serviceMetadata)
-            : this(serviceMetadata, DefaultRpcCallingAdapter.Singleton)
-        {
-        }
-
         /// <summary>
         /// Initializes a new instance of the CompiledServiceHandler and pre-compiles all methods
         /// </summary>
+        [ActivatorUtilitiesConstructor()]
         public CompiledServiceHandler(ServiceMetadata serviceMetadata, IRpcCallingAdapter rpcCallingAdapter)
         {
             _serviceMetadata = serviceMetadata ?? throw new ArgumentNullException(nameof(serviceMetadata));

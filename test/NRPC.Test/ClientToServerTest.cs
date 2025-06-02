@@ -18,7 +18,7 @@ namespace NRPC.Test
         {
             private readonly Channel<RpcResponse> _responses = Channel.CreateUnbounded<RpcResponse>();
 
-            private CompiledServiceHandler<ITestService> _handler = new CompiledServiceHandler<ITestService>(ServiceMetadata.Create<ITestService>());
+            private CompiledServiceHandler<ITestService> _handler = new CompiledServiceHandler<ITestService>();
 
             private ITestService _testService;
 
