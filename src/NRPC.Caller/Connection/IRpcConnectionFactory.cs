@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 
-namespace NRPC.Caller
+namespace NRPC.Caller.Connection
 {
     public interface IRpcConnectionFactory
     {

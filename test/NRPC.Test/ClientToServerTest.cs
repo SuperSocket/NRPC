@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NRPC.Abstractions;
 using NRPC.Abstractions.Metadata;
 using NRPC.Caller;
+using NRPC.Caller.Connection;
 using NRPC.Executor;
 using Xunit;
 using Xunit.Sdk;
@@ -45,6 +46,10 @@ namespace NRPC.Test
             {
                 return await _responses.Reader.ReadAsync(cancellationToken);
             }
+
+            public void Dispose()
+            {
+            }
         }
 
         // A connection factory for testing
@@ -67,7 +72,7 @@ namespace NRPC.Test
         public async Task TestBasicRpcWorkflow()
         {
             var factory = new RpcCallerFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection()));
-            var client = await factory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = factory.CreateCaller(TestContext.Current.CancellationToken);
 
             Assert.Equal(3, await client.Add(1, 2));
             Assert.Equal("123", await client.Concat("1", "23"));
@@ -78,7 +83,7 @@ namespace NRPC.Test
         public async Task TestRpcException()
         {
             var factory = new RpcCallerFactory<ITestService>(new TestRpcConnectionFactory(new MockRpcConnection(new TestServiceWithException())));
-            var client = await factory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = factory.CreateCaller(TestContext.Current.CancellationToken);
 
             var rpcException = await Assert.ThrowsAsync<RpcServerException>(async () => await client.ExecuteVoid("Test exception"));
             Assert.NotNull(rpcException.ServerError);

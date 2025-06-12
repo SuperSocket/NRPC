@@ -8,6 +8,7 @@ using NRPC.Caller;
 using Xunit;
 using System.Collections.Generic;
 using System.Threading.Channels;
+using NRPC.Caller.Connection;
 
 namespace NRPC.Test
 {
@@ -60,6 +61,10 @@ namespace NRPC.Test
 
             return response;
         }
+
+        public void Dispose()
+        {
+        }
     }
 
     public class MockRpcConnectionFactory : IRpcConnectionFactory
@@ -80,13 +85,13 @@ namespace NRPC.Test
     public class ClientDispatchProxyTest
     {
         [Fact]
-        public async Task TestDispatchProxyCreation()
+        public void TestDispatchProxyCreation()
         {
             // Arrange
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
             // Act
-            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             
             // Assert
             Assert.NotNull(client);
@@ -102,7 +107,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client =  clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             // Invoke the method
             var result = await client.Add(5, 10);
             
@@ -126,7 +131,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = clientFactory.CreateCaller(TestContext.Current.CancellationToken);
 
             // Invoke the method
             var result = await client.Concat("Hello, ", "World!");
@@ -151,7 +156,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = await clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             
             // Invoke the void method
             await client.ExecuteVoid("test command");

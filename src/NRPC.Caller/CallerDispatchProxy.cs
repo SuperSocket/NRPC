@@ -8,13 +8,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NRPC.Abstractions;
 using NRPC.Abstractions.Metadata;
+using NRPC.Caller.Connection;
 using NRPC.Proxy;
 
 namespace NRPC.Caller
 {
     public class CallerDispatchProxy : RpcProxy, IDisposable
-    {        
-        private IRpcConnection m_RpcConnection;
+    {
+        private IInvokeStateManager m_InvokeStateManager;
+        private IAsyncObjectPool<IRpcConnection> m_RpcConnectionPool;
 
         private IRpcCallingAdapter m_RpcCallingAdapter;
 
@@ -22,33 +24,20 @@ namespace NRPC.Caller
         
         private IReadOnlyDictionary<MethodInfo, IResponseHandler> m_ResponseHandlers;
 
-        private ConcurrentDictionary<string, InvokeState> m_InvokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
-
         private CancellationTokenSource m_ReadCancellationTokenSource = new CancellationTokenSource();
         
         public CallerDispatchProxy()
         {
         }
 
-        internal void Initialize(IRpcConnection rpcConnection, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter resultExpressionConverter)
+        internal void Initialize(IAsyncObjectPool<IRpcConnection> rpcConnectionPool, IInvokeStateManager invokeStateManager, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter resultExpressionConverter)
         {
-            m_RpcConnection = rpcConnection ?? throw new ArgumentNullException(nameof(rpcConnection));
+            m_RpcConnectionPool = rpcConnectionPool ?? throw new ArgumentNullException(nameof(rpcConnectionPool));
+            m_InvokeStateManager = invokeStateManager ?? throw new ArgumentNullException(nameof(invokeStateManager));
             m_RpcCallingAdapter = rpcCallingAdapter ?? throw new ArgumentNullException(nameof(rpcCallingAdapter));
             m_ResultExpressionConverter = resultExpressionConverter ?? throw new ArgumentNullException(nameof(resultExpressionConverter));
 
             InitializeResponseHanders();
-            StartReadResponse();
-        }
-
-        private void StartReadResponse()
-        {
-            _ = ReadResponseAsync(m_ReadCancellationTokenSource.Token).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    // Handle exception
-                }
-            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private IResponseHandler CreateResponseHandler(MethodInfo methodInfo)
@@ -83,22 +72,6 @@ namespace NRPC.Caller
                     m => m,
                     m => CreateResponseHandler(m));
         }
-
-        private async Task ReadResponseAsync(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var rpcResponse = await m_RpcConnection.ReceiveAsync(cancellationToken);
-                
-                if (rpcResponse == null)
-                    continue;
-
-                if (!m_InvokeStates.TryRemove(rpcResponse.Id, out var invokeState))
-                    return;
-
-                invokeState.ResponseHandler.HandleResponse(invokeState.TaskCompletionSource, rpcResponse);
-            }                
-        }
         
         private RpcRequest CreateRequest(MethodInfo targetMethod, object[] args)
         {
@@ -131,14 +104,17 @@ namespace NRPC.Caller
                 ResponseHandler = responseHandler
             };
             
-            if (!m_InvokeStates.TryAdd(request.Id, invokeState))
+            if (!m_InvokeStateManager.TrySaveInvokeState(request.Id, invokeState))
             {
                 throw new Exception($"InvokeState with ID {request.Id} already exists.");
             }
 
             try
             {
-                await m_RpcConnection.SendAsync(request);
+                using var connectionCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                var connection = await m_RpcConnectionPool.GetAsync(connectionCts.Token).ConfigureAwait(false);
+                await connection.SendAsync(request).ConfigureAwait(false);
+                m_RpcConnectionPool.Return(connection);
             }
             catch (Exception e)
             {

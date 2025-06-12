@@ -8,10 +8,10 @@ namespace NRPC.Abstractions
     /// <summary>
     /// The interface for RPC connection
     /// </summary>
-    public interface IRpcConnection
+    public interface IRpcConnection : IDisposable
     {
 
-        Task SendAsync(RpcRequest request);        
+        Task SendAsync(RpcRequest request);
 
         Task<RpcResponse> ReceiveAsync(CancellationToken cancellationToken = default);
     }
