@@ -13,75 +13,6 @@ using NRPC.Caller.Connection;
 namespace NRPC.Test
 {
 
-    public class MockRpcConnection : IRpcConnection
-    {
-        private readonly Channel<RpcRequest> _requestChannel = Channel.CreateUnbounded<RpcRequest>();
-        private readonly Action<RpcRequest> _requestAction;
-
-        public MockRpcConnection(Action<RpcRequest> requestAction = null)
-        {
-            _requestAction = requestAction;
-        }
-
-        public Task SendAsync(RpcRequest request)
-        {
-            _requestChannel.Writer.TryWrite(request);
-            _requestAction?.Invoke(request);
-            return Task.CompletedTask;
-        }
-
-        public async Task<RpcResponse> ReceiveAsync(CancellationToken cancellationToken = default)
-        {
-            var request = await _requestChannel.Reader.ReadAsync(cancellationToken);
-
-            var response = new RpcResponse();
-
-            response.Id = request.Id;
-
-            if (request.Method == "Add")
-            {
-                int x = (int)request.Parameters[0];
-                int y = (int)request.Parameters[1];
-                response.Result = x + y;
-            }
-            else if (request.Method == "Concat")
-            {
-                string x = (string)request.Parameters[0];
-                string y = (string)request.Parameters[1];
-                response.Result = x + y;
-            }
-            else if (request.Method == "ExecuteVoid")
-            {
-                // No result for void
-            }
-            else
-            {
-                response.Error = new RpcError(404, "Method not found");
-            }
-
-            return response;
-        }
-
-        public void Dispose()
-        {
-        }
-    }
-
-    public class MockRpcConnectionFactory : IRpcConnectionFactory
-    {
-        private readonly MockRpcConnection mockRpcConnection;
-
-        public MockRpcConnectionFactory(MockRpcConnection mockRpcConnection)
-        {
-            this.mockRpcConnection = mockRpcConnection;
-        }
-
-        public Task<IRpcConnection> CreateConnection(CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IRpcConnection>(mockRpcConnection);
-        }
-    }
-
     public class ClientDispatchProxyTest
     {
         [Fact]
@@ -102,15 +33,16 @@ namespace NRPC.Test
         public async Task TestDispatchProxyInvokesMethodWithCorrectArguments()
         {
             // Arrange
-            RpcRequest capturedRequest = null;
-            var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
+            var mockRpcConnection = new MockRpcConnection();
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
             var client =  clientFactory.CreateCaller(TestContext.Current.CancellationToken);
             // Invoke the method
             var result = await client.Add(5, 10);
-            
+
+            var capturedRequest = mockRpcConnection.LastSentRequest;
+
             // Assert
             Assert.NotNull(capturedRequest);
             Assert.Equal("Add", capturedRequest.Method);
@@ -123,11 +55,8 @@ namespace NRPC.Test
         [Fact]
         public async Task TestDispatchProxyStringOperation()
         {
-            // Arrange
-            RpcRequest capturedRequest = null;
-            
-            var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
-
+            // Arrange            
+            var mockRpcConnection = new MockRpcConnection();
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
@@ -136,6 +65,8 @@ namespace NRPC.Test
             // Invoke the method
             var result = await client.Concat("Hello, ", "World!");
             
+            var capturedRequest = mockRpcConnection.LastSentRequest;
+
             // Assert
             Assert.NotNull(capturedRequest);
             Assert.Equal("Concat", capturedRequest.Method);
@@ -149,9 +80,7 @@ namespace NRPC.Test
         public async Task TestDispatchProxyVoidMethod()
         {
             // Arrange
-            RpcRequest capturedRequest = null;
-            
-            var mockRpcConnection = new MockRpcConnection(req => capturedRequest = req);
+            var mockRpcConnection = new MockRpcConnection();
 
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
@@ -160,7 +89,9 @@ namespace NRPC.Test
             
             // Invoke the void method
             await client.ExecuteVoid("test command");
-            
+
+            var capturedRequest = mockRpcConnection.LastSentRequest;
+
             // Assert
             Assert.NotNull(capturedRequest);
             Assert.Equal("ExecuteVoid", capturedRequest.Method);

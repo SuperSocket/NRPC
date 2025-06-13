@@ -39,7 +39,7 @@ namespace NRPC.Caller.Connection
 
         public virtual bool Return(IRpcConnection obj)
         {
-            return true;
+            return obj.IsConnected;
         }
 
         private async Task ReadResponseAsync(IRpcConnection connection, CancellationToken cancellationToken)

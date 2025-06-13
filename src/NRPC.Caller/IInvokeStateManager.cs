@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace NRPC.Caller
 {
-    interface IInvokeStateManager
+    internal interface IInvokeStateManager
     {
         bool TrySaveInvokeState(string requestId, InvokeState invokeState);
     }
