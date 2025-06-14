@@ -175,7 +175,7 @@ namespace NRPC.Test
                 DirectTypeExpressionConverter.Singleton);
 
             // Act
-            var caller = callerFactory.CreateCaller(CancellationToken.None);
+            var caller = callerFactory.CreateCaller();
 
             // Assert
             Assert.NotNull(caller);
@@ -192,7 +192,7 @@ namespace NRPC.Test
                 DefaultRpcCallingAdapter.Singleton,
                 DirectTypeExpressionConverter.Singleton);
 
-            var caller = callerFactory.CreateCaller(CancellationToken.None);
+            var caller = callerFactory.CreateCaller();
 
             // Act
             // Make multiple concurrent calls to verify connection pooling

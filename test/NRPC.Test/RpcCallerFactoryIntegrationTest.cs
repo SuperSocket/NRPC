@@ -24,7 +24,7 @@ namespace NRPC.Test
                 DefaultRpcCallingAdapter.Singleton,
                 DirectTypeExpressionConverter.Singleton);
 
-            var caller = callerFactory.CreateCaller(CancellationToken.None);
+            var caller = callerFactory.CreateCaller();
 
             // Act - Make multiple concurrent calls
             var tasks = new Task<int>[10];
@@ -57,7 +57,7 @@ namespace NRPC.Test
                 DefaultRpcCallingAdapter.Singleton,
                 DirectTypeExpressionConverter.Singleton);
 
-            var caller = callerFactory.CreateCaller(CancellationToken.None);
+            var caller = callerFactory.CreateCaller();
 
             // Act - Mix different method calls
             var addTask = caller.Add(5, 3);
@@ -82,7 +82,7 @@ namespace NRPC.Test
                 DefaultRpcCallingAdapter.Singleton,
                 DirectTypeExpressionConverter.Singleton);
 
-            var caller = callerFactory.CreateCaller(CancellationToken.None);
+            var caller = callerFactory.CreateCaller();
 
             // Act & Assert
             // Some calls might fail due to flaky connections, but the pool should handle it

@@ -9,6 +9,6 @@ namespace NRPC.Caller
     
     public interface ICallerFactory<T> : ICallerFactory
     {
-        T CreateCaller(CancellationToken cancellationToken = default);
+        T CreateCaller();
     }
 }

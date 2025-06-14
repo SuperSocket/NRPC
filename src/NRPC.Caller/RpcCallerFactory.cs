@@ -41,11 +41,11 @@ namespace NRPC.Caller
             m_ResultExpressionConverter = expressionConverter ?? throw new ArgumentNullException(nameof(expressionConverter));
         }
 
-        public T CreateCaller(CancellationToken cancellationToken)
+        public T CreateCaller()
         {
             if (m_Disposed)
                 throw new ObjectDisposedException(nameof(RpcCallerFactory<T, TClientDispatchProxy>));
-                
+
             var proxyInstance = RpcProxy.Create<T, TClientDispatchProxy>();
             (proxyInstance as CallerDispatchProxy).Initialize(m_ConnectionPool, m_InvokeStateManager, m_RpcCallingAdapter, m_ResultExpressionConverter);
             return (T)proxyInstance;

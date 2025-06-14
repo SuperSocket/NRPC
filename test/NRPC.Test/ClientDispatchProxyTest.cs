@@ -22,7 +22,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(new MockRpcConnection()));
             
             // Act
-            var client = clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = clientFactory.CreateCaller();
             
             // Assert
             Assert.NotNull(client);
@@ -37,7 +37,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client =  clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client =  clientFactory.CreateCaller();
             // Invoke the method
             var result = await client.Add(5, 10);
 
@@ -60,7 +60,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = clientFactory.CreateCaller();
 
             // Invoke the method
             var result = await client.Concat("Hello, ", "World!");
@@ -85,7 +85,7 @@ namespace NRPC.Test
             var clientFactory = new RpcCallerFactory<ITestService>(new MockRpcConnectionFactory(mockRpcConnection));
 
             // Act
-            var client = clientFactory.CreateCaller(TestContext.Current.CancellationToken);
+            var client = clientFactory.CreateCaller();
             
             // Invoke the void method
             await client.ExecuteVoid("test command");
