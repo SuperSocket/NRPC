@@ -10,13 +10,13 @@ namespace NRPC.Test
 {
     public class AsyncObjectPoolStressTest
     {
-        //[Fact]
+        [Fact]
         public async Task AsyncObjectPool_Should_Handle_High_Concurrency()
         {
             // Arrange
             var policy = new SlowCreationObjectPolicy();
             var pool = new AsyncObjectPool<TestPoolObject>(policy, maxSize: 10);
-            const int concurrentTasks = 10;
+            const int concurrentTasks = 40;
             const int operationsPerTask = 10;
 
             // Act
@@ -24,32 +24,20 @@ namespace NRPC.Test
                 .Select(_ => Task.Run(async () =>
                 {
                     var objects = new List<TestPoolObject>();
-                    
+
                     for (int i = 0; i < operationsPerTask; i++)
                     {
                         var obj = await pool.GetAsync(CancellationToken.None);
                         objects.Add(obj);
-                        
                         // Simulate some work
                         await Task.Delay(1);
-                    }
-                    
-                    // Return all objects
-                    foreach (var obj in objects)
-                    {
                         pool.Return(obj);
                     }
                 }))
                 .ToArray();
 
-            await Task.WhenAll(tasks).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    throw t.Exception ?? new Exception("Unknown error during task execution");
-                }
-            }, TaskContinuationOptions.OnlyOnFaulted);
-
+            await Task.WhenAll(tasks);
+            
             // Assert
             // Verify that we didn't create too many objects due to pooling
             Assert.True(policy.CreateCount > 0);
