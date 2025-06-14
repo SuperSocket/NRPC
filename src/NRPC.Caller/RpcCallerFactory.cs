@@ -19,6 +19,8 @@ namespace NRPC.Caller
 
         private IExpressionConverter m_ResultExpressionConverter;
 
+        private bool m_Disposed = false;
+
         public RpcCallerFactory(IRpcConnectionFactory connectionFactory, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
             : this(new RpcConnectionObjectPolicy(connectionFactory), rpcCallingAdapter, expressionConverter)
         {
@@ -41,9 +43,67 @@ namespace NRPC.Caller
 
         public T CreateCaller(CancellationToken cancellationToken)
         {
+            if (m_Disposed)
+                throw new ObjectDisposedException(nameof(RpcCallerFactory<T, TClientDispatchProxy>));
+                
             var proxyInstance = RpcProxy.Create<T, TClientDispatchProxy>();
             (proxyInstance as CallerDispatchProxy).Initialize(m_ConnectionPool, m_InvokeStateManager, m_RpcCallingAdapter, m_ResultExpressionConverter);
             return (T)proxyInstance;
+        }
+
+        public void Dispose()
+        {
+            if (m_Disposed)
+                return;
+
+            m_Disposed = true;
+
+            if (m_ConnectionPool is IDisposable disposablePool)
+            {
+                try
+                {
+                    disposablePool.Dispose();
+                }
+                catch (Exception)
+                {
+                    // Log or handle the exception as needed
+                }
+            }
+
+            m_ConnectionPool = null;
+            m_InvokeStateManager = null;
+            m_RpcCallingAdapter = null;
+            m_ResultExpressionConverter = null;
+
+            GC.SuppressFinalize(this);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            if (m_Disposed)
+                return ValueTask.CompletedTask;
+
+            m_Disposed = true;
+
+            if (m_ConnectionPool is IAsyncDisposable asyncDisposablePool)
+            {
+                try
+                {
+                    return asyncDisposablePool.DisposeAsync();
+                }
+                catch (Exception)
+                {
+                    // Log or handle the exception as needed
+                }
+            }
+
+            m_ConnectionPool = null;
+            m_InvokeStateManager = null;
+            m_RpcCallingAdapter = null;
+            m_ResultExpressionConverter = null;
+
+            GC.SuppressFinalize(this);
+            return ValueTask.CompletedTask;
         }
     }
 
