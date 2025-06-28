@@ -22,13 +22,13 @@ namespace NRPC.Caller
         private bool m_Disposed = false;
 
         public RpcCallerFactory(IRpcConnectionFactory connectionFactory, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
-            : this(new ConnectionFactory<IRpcConnection>(connectionFactory), rpcCallingAdapter, expressionConverter)
+            : this(new ConnectionFactory(connectionFactory), rpcCallingAdapter, expressionConverter)
         {
 
         }
 
-        internal RpcCallerFactory(ConnectionFactory<IRpcConnection> connectionFactory, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
-            : this(new SingleConnectionManager<IRpcConnection>(connectionFactory), connectionFactory, rpcCallingAdapter, expressionConverter)
+        internal RpcCallerFactory(ConnectionFactory connectionFactory, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
+            : this(new SingleConnectionManager(connectionFactory), connectionFactory, rpcCallingAdapter, expressionConverter)
         {
 
         }

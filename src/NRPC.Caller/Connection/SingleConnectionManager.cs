@@ -1,24 +1,24 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using NRPC.Abstractions;
 
 namespace NRPC.Caller.Connection
 {
-    public class SingleConnectionManager<TConnection> : IConnectionManager<TConnection>
-        where TConnection : IDisposable, IAsyncDisposable
+    public class SingleConnectionManager : IConnectionManager<IRpcConnection>
     {
-        private readonly IConnectionFactory<TConnection> _connectionFactory;
+        private readonly IConnectionFactory<IRpcConnection> _connectionFactory;
 
-        private readonly IConnectionValidator<TConnection> _connectionValidator;
+        private readonly IConnectionValidator<IRpcConnection> _connectionValidator;
 
-        private TConnection _connection;
+        private IRpcConnection _connection;
 
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        public SingleConnectionManager(IConnectionFactory<TConnection> connectionFactory, IConnectionValidator<TConnection> connectionValidator = null)
+        public SingleConnectionManager(IConnectionFactory<IRpcConnection> connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-            _connectionValidator = connectionValidator ?? NullConnectionValidator<TConnection>.Instance;
+            _connectionValidator = RpcConnectionValidator.Instance;
         }
 
         public void Dispose()
@@ -29,16 +29,16 @@ namespace NRPC.Caller.Connection
 
         public async ValueTask DisposeAsync()
         {
-            if (_connection is TConnection connection)
+            if (_connection is IRpcConnection connection)
             {
                 _connection = default;
                 await connection.DisposeAsync();
             }
         }
 
-        public Task<TConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+        public Task<IRpcConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
         {
-            if (_connection is TConnection connection)
+            if (_connection is IRpcConnection connection)
             {
                 return Task.FromResult(connection);
             }
@@ -47,7 +47,7 @@ namespace NRPC.Caller.Connection
 
             try
             {
-                if (_connection is TConnection existingConnection)
+                if (_connection is IRpcConnection existingConnection)
                 {
                     return Task.FromResult(existingConnection);
                 }
@@ -61,7 +61,7 @@ namespace NRPC.Caller.Connection
             }
         }
 
-        public void ReturnConnection(TConnection connection)
+        public void ReturnConnection(IRpcConnection connection)
         {
             if (connection == null)
                 return;

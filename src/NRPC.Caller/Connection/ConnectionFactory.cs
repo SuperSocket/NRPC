@@ -6,19 +6,18 @@ using NRPC.Abstractions;
 
 namespace NRPC.Caller.Connection
 {
-    internal class ConnectionFactory<TConnection> : IConnectionFactory<TConnection>, IInvokeStateManager
-        where TConnection : IDisposable, IAsyncDisposable, IRpcConnection
+    internal class ConnectionFactory : IConnectionFactory<IRpcConnection>, IInvokeStateManager
     {
-        private readonly IConnectionFactory<TConnection> _connectionFactory;
+        private readonly IConnectionFactory<IRpcConnection> _connectionFactory;
 
         private ConcurrentDictionary<string, InvokeState> _invokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
 
-        public ConnectionFactory(IConnectionFactory<TConnection> connectionFactory)
+        public ConnectionFactory(IConnectionFactory<IRpcConnection> connectionFactory)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         }
 
-        public async Task<TConnection> CreateConnectionAsync(CancellationToken cancellationToken = default)
+        public async Task<IRpcConnection> CreateConnectionAsync(CancellationToken cancellationToken = default)
         {
             var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
@@ -50,7 +49,7 @@ namespace NRPC.Caller.Connection
                 invokeState.ResponseHandler.HandleResponse(invokeState.TaskCompletionSource, rpcResponse);
             }
         }
-        
+
         public bool TrySaveInvokeState(string requestId, InvokeState invokeState)
         {
             return _invokeStates.TryAdd(requestId, invokeState);
