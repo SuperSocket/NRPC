@@ -5,7 +5,7 @@ using NRPC.Abstractions;
 
 namespace NRPC.Caller.Connection
 {
-    public class SingleConnectionManager : IConnectionManager<IRpcConnection>
+    internal class SingleConnectionManager : IConnectionManager<IRpcConnection>
     {
         private readonly IConnectionFactory<IRpcConnection> _connectionFactory;
 
@@ -38,12 +38,12 @@ namespace NRPC.Caller.Connection
 
         public Task<IRpcConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
         {
+            _semaphore.WaitAsync(cancellationToken);
+
             if (_connection is IRpcConnection connection)
             {
                 return Task.FromResult(connection);
             }
-
-            _semaphore.WaitAsync(cancellationToken);
 
             try
             {
@@ -73,7 +73,7 @@ namespace NRPC.Caller.Connection
             else
             {
                 _connection = default;
-                
+
                 try
                 {
                     connection.Dispose();
@@ -83,6 +83,8 @@ namespace NRPC.Caller.Connection
                     // Ignore exceptions during disposal
                 }
             }
+
+            _semaphore.Release();
         }
     }
 }
