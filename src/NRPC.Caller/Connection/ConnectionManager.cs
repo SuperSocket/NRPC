@@ -1,47 +1,41 @@
-
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 
-/*
 namespace NRPC.Caller.Connection
 {
-
-    public class RpcConnectionObjectPolicy : IAsyncPooledObjectPolicy<IRpcConnection>, IInvokeStateManager
+    public class ConnectionManager<TConnection> : IConnectionManager<TConnection>, IInvokeStateManager
+        where TConnection : class, IDisposable, IAsyncDisposable, IRpcConnection
     {
-        private readonly IRpcConnectionFactory _connectionFactory;
+        private readonly IConnectionManager<TConnection> _connectionManager;
 
         private ConcurrentDictionary<string, InvokeState> _invokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
 
-        public RpcConnectionObjectPolicy(IRpcConnectionFactory connectionFactory)
+        public ConnectionManager(IConnectionManager<TConnection> connectionManager)
         {
-            _connectionFactory = connectionFactory;
+            _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
         }
 
-        public virtual async Task<IRpcConnection> CreateAsync(CancellationToken cancellationToken = default)
+        public void Dispose()
         {
-            var connection = await _connectionFactory
-                .CreateConnection(cancellationToken)
-                .ConfigureAwait(false);
-
-            _ = ReadResponseAsync(connection, cancellationToken)
-                .ContinueWith(t =>
-                {
-                    if (t.IsFaulted)
-                    {
-                        // Handle the error, e.g., log it
-                        Console.WriteLine($"Error reading response: {t.Exception?.GetBaseException().Message}");
-                    }
-                }, TaskContinuationOptions.OnlyOnFaulted);
-
-            return connection;
+            _connectionManager.Dispose();
         }
 
-        public virtual bool Return(IRpcConnection obj)
+        public ValueTask DisposeAsync()
         {
-            return obj.IsConnected;
+            return _connectionManager.DisposeAsync();
+        }
+
+        public Task<TConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+        {
+            return _connectionManager.GetConnectionAsync(cancellationToken);
+        }
+
+        public void ReturnConnection(TConnection connection)
+        {
+            _connectionManager.ReturnConnection(connection);
         }
 
         private async Task ReadResponseAsync(IRpcConnection connection, CancellationToken cancellationToken)
@@ -64,6 +58,5 @@ namespace NRPC.Caller.Connection
         {
             return _invokeStates.TryAdd(requestId, invokeState);
         }
-    }    
+    }
 }
-*/

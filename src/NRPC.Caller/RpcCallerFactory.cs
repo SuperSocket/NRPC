@@ -11,7 +11,7 @@ namespace NRPC.Caller
     public class RpcCallerFactory<T, TClientDispatchProxy> : ICallerFactory<T>
         where TClientDispatchProxy : CallerDispatchProxy
     {
-        private IAsyncObjectPool<IRpcConnection> m_ConnectionPool;
+        private IConnectionManager<IRpcConnection> m_ConnectionManager;
 
         private IInvokeStateManager m_InvokeStateManager;
 
@@ -22,20 +22,20 @@ namespace NRPC.Caller
         private bool m_Disposed = false;
 
         public RpcCallerFactory(IRpcConnectionFactory connectionFactory, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
-            : this(new RpcConnectionObjectPolicy(connectionFactory), rpcCallingAdapter, expressionConverter)
+            : this(new ConnectionFactory<IRpcConnection>(connectionFactory), rpcCallingAdapter, expressionConverter)
         {
 
         }
 
-        internal RpcCallerFactory(IAsyncPooledObjectPolicy<IRpcConnection> connectionPoolPolicy, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
-            : this(new AsyncObjectPool<IRpcConnection>(connectionPoolPolicy), connectionPoolPolicy as IInvokeStateManager, rpcCallingAdapter, expressionConverter)
+        internal RpcCallerFactory(ConnectionFactory<IRpcConnection> connectionFactory, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
+            : this(new SingleConnectionManager<IRpcConnection>(connectionFactory), connectionFactory, rpcCallingAdapter, expressionConverter)
         {
 
         }
 
-        internal RpcCallerFactory(IAsyncObjectPool<IRpcConnection> connectionPool, IInvokeStateManager invokeStateManager, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
+        internal RpcCallerFactory(IConnectionManager<IRpcConnection> connectionManager, IInvokeStateManager invokeStateManager, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter expressionConverter)
         {
-            m_ConnectionPool = connectionPool ?? throw new ArgumentNullException(nameof(connectionPool));
+            m_ConnectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             m_InvokeStateManager = invokeStateManager ?? throw new ArgumentNullException(nameof(invokeStateManager));
             m_RpcCallingAdapter = rpcCallingAdapter ?? throw new ArgumentNullException(nameof(rpcCallingAdapter));
             m_ResultExpressionConverter = expressionConverter ?? throw new ArgumentNullException(nameof(expressionConverter));
@@ -47,7 +47,7 @@ namespace NRPC.Caller
                 throw new ObjectDisposedException(nameof(RpcCallerFactory<T, TClientDispatchProxy>));
 
             var proxyInstance = RpcProxy.Create<T, TClientDispatchProxy>();
-            (proxyInstance as CallerDispatchProxy).Initialize(m_ConnectionPool, m_InvokeStateManager, m_RpcCallingAdapter, m_ResultExpressionConverter);
+            (proxyInstance as CallerDispatchProxy).Initialize(m_ConnectionManager, m_InvokeStateManager, m_RpcCallingAdapter, m_ResultExpressionConverter);
             return (T)proxyInstance;
         }
 
@@ -58,7 +58,7 @@ namespace NRPC.Caller
 
             m_Disposed = true;
 
-            if (m_ConnectionPool is IDisposable disposablePool)
+            if (m_ConnectionManager is IDisposable disposablePool)
             {
                 try
                 {
@@ -70,7 +70,7 @@ namespace NRPC.Caller
                 }
             }
 
-            m_ConnectionPool = null;
+            m_ConnectionManager = null;
             m_InvokeStateManager = null;
             m_RpcCallingAdapter = null;
             m_ResultExpressionConverter = null;
@@ -85,7 +85,7 @@ namespace NRPC.Caller
 
             m_Disposed = true;
 
-            if (m_ConnectionPool is IAsyncDisposable asyncDisposablePool)
+            if (m_ConnectionManager is IAsyncDisposable asyncDisposablePool)
             {
                 try
                 {
@@ -97,7 +97,7 @@ namespace NRPC.Caller
                 }
             }
 
-            m_ConnectionPool = null;
+            m_ConnectionManager = null;
             m_InvokeStateManager = null;
             m_RpcCallingAdapter = null;
             m_ResultExpressionConverter = null;

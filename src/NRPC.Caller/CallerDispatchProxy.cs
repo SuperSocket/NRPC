@@ -16,7 +16,7 @@ namespace NRPC.Caller
     public class CallerDispatchProxy : RpcProxy, IDisposable
     {
         private IInvokeStateManager m_InvokeStateManager;
-        private IAsyncObjectPool<IRpcConnection> m_RpcConnectionPool;
+        private IConnectionManager<IRpcConnection> m_ConnectionManager;
 
         private IRpcCallingAdapter m_RpcCallingAdapter;
 
@@ -30,9 +30,9 @@ namespace NRPC.Caller
         {
         }
 
-        internal void Initialize(IAsyncObjectPool<IRpcConnection> rpcConnectionPool, IInvokeStateManager invokeStateManager, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter resultExpressionConverter)
+        internal void Initialize(IConnectionManager<IRpcConnection> connectionManager, IInvokeStateManager invokeStateManager, IRpcCallingAdapter rpcCallingAdapter, IExpressionConverter resultExpressionConverter)
         {
-            m_RpcConnectionPool = rpcConnectionPool ?? throw new ArgumentNullException(nameof(rpcConnectionPool));
+            m_ConnectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             m_InvokeStateManager = invokeStateManager ?? throw new ArgumentNullException(nameof(invokeStateManager));
             m_RpcCallingAdapter = rpcCallingAdapter ?? throw new ArgumentNullException(nameof(rpcCallingAdapter));
             m_ResultExpressionConverter = resultExpressionConverter ?? throw new ArgumentNullException(nameof(resultExpressionConverter));
@@ -112,9 +112,9 @@ namespace NRPC.Caller
             try
             {
                 using var connectionCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                var connection = await m_RpcConnectionPool.GetAsync(connectionCts.Token).ConfigureAwait(false);
+                var connection = await m_ConnectionManager.GetConnectionAsync(connectionCts.Token).ConfigureAwait(false);
                 await connection.SendAsync(request).ConfigureAwait(false);
-                m_RpcConnectionPool.Return(connection);
+                m_ConnectionManager.ReturnConnection(connection);
             }
             catch (Exception e)
             {

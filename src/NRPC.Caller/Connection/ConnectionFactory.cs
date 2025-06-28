@@ -1,30 +1,26 @@
-
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using NRPC.Abstractions;
 
-/*
 namespace NRPC.Caller.Connection
 {
-
-    public class RpcConnectionObjectPolicy : IAsyncPooledObjectPolicy<IRpcConnection>, IInvokeStateManager
+    internal class ConnectionFactory<TConnection> : IConnectionFactory<TConnection>, IInvokeStateManager
+        where TConnection : IDisposable, IAsyncDisposable, IRpcConnection
     {
-        private readonly IRpcConnectionFactory _connectionFactory;
+        private readonly IConnectionFactory<TConnection> _connectionFactory;
 
         private ConcurrentDictionary<string, InvokeState> _invokeStates = new ConcurrentDictionary<string, InvokeState>(StringComparer.OrdinalIgnoreCase);
 
-        public RpcConnectionObjectPolicy(IRpcConnectionFactory connectionFactory)
+        public ConnectionFactory(IConnectionFactory<TConnection> connectionFactory)
         {
-            _connectionFactory = connectionFactory;
+            _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         }
 
-        public virtual async Task<IRpcConnection> CreateAsync(CancellationToken cancellationToken = default)
+        public async Task<TConnection> CreateConnectionAsync(CancellationToken cancellationToken = default)
         {
-            var connection = await _connectionFactory
-                .CreateConnection(cancellationToken)
-                .ConfigureAwait(false);
+            var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
             _ = ReadResponseAsync(connection, cancellationToken)
                 .ContinueWith(t =>
@@ -37,11 +33,6 @@ namespace NRPC.Caller.Connection
                 }, TaskContinuationOptions.OnlyOnFaulted);
 
             return connection;
-        }
-
-        public virtual bool Return(IRpcConnection obj)
-        {
-            return obj.IsConnected;
         }
 
         private async Task ReadResponseAsync(IRpcConnection connection, CancellationToken cancellationToken)
@@ -59,11 +50,10 @@ namespace NRPC.Caller.Connection
                 invokeState.ResponseHandler.HandleResponse(invokeState.TaskCompletionSource, rpcResponse);
             }
         }
-
-        bool IInvokeStateManager.TrySaveInvokeState(string requestId, InvokeState invokeState)
+        
+        public bool TrySaveInvokeState(string requestId, InvokeState invokeState)
         {
             return _invokeStates.TryAdd(requestId, invokeState);
         }
-    }    
+    }
 }
-*/

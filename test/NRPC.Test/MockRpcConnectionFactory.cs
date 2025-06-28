@@ -18,7 +18,7 @@ namespace NRPC.Test
             this.mockRpcConnection = mockRpcConnection;
         }
 
-        public Task<IRpcConnection> CreateConnection(CancellationToken cancellationToken)
+        public Task<IRpcConnection> CreateConnectionAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult<IRpcConnection>(mockRpcConnection);
         }

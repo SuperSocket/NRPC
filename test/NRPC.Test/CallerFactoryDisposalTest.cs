@@ -103,7 +103,7 @@ namespace NRPC.Test
         public void CallerFactory_Should_Dispose_Connection_Pool_On_Dispose()
         {
             // Arrange
-            var disposablePool = new DisposableConnectionPool();
+            var disposablePool = new DisposableConnectionManager();
             var invokeStateManager = new TestInvokeStateManager();
             var factory = new RpcCallerFactory<ITestCallerService, CallerDispatchProxy>(
                 disposablePool, 
@@ -122,7 +122,7 @@ namespace NRPC.Test
         public async Task CallerFactory_Should_Dispose_Connection_Pool_On_DisposeAsync()
         {
             // Arrange
-            var asyncDisposablePool = new AsyncDisposableConnectionPool();
+            var asyncDisposablePool = new AsyncDisposableConnectionManager();
             var invokeStateManager = new TestInvokeStateManager();
             var factory = new RpcCallerFactory<ITestCallerService, CallerDispatchProxy>(
                 asyncDisposablePool,
@@ -142,7 +142,7 @@ namespace NRPC.Test
         public void CallerFactory_Should_Handle_Connection_Pool_Disposal_Exceptions()
         {
             // Arrange
-            var faultyPool = new FaultyDisposableConnectionPool();
+            var faultyPool = new FaultyDisposableConnectionManager();
             var invokeStateManager = new TestInvokeStateManager();
             var factory = new RpcCallerFactory<ITestCallerService, CallerDispatchProxy>(
                 faultyPool,
@@ -162,7 +162,7 @@ namespace NRPC.Test
         public async Task CallerFactory_Should_Handle_Connection_Pool_Async_Disposal_Exceptions()
         {
             // Arrange
-            var faultyAsyncPool = new FaultyAsyncDisposableConnectionPool();
+            var faultyAsyncPool = new FaultyAsyncDisposableConnectionManager();
             var invokeStateManager = new TestInvokeStateManager();
             var factory = new RpcCallerFactory<ITestCallerService, CallerDispatchProxy>(
                 faultyAsyncPool,
@@ -243,7 +243,7 @@ namespace NRPC.Test
         // Helper classes for testing
         private class TestRpcConnectionFactory : IRpcConnectionFactory
         {
-            public Task<IRpcConnection> CreateConnection(CancellationToken cancellationToken = default)
+            public Task<IRpcConnection> CreateConnectionAsync(CancellationToken cancellationToken = default)
             {
                 return Task.FromResult<IRpcConnection>(new TestRpcConnection());
             }
@@ -289,18 +289,9 @@ namespace NRPC.Test
             }
         }
 
-        private class DisposableConnectionPool : IAsyncObjectPool<IRpcConnection>, IDisposable
+        private class DisposableConnectionManager : IConnectionManager<IRpcConnection>, IDisposable
         {
             public bool IsDisposed { get; private set; }
-
-            public ValueTask<IRpcConnection> GetAsync(CancellationToken cancellationToken)
-            {
-                return ValueTask.FromResult<IRpcConnection>(new TestRpcConnection());
-            }
-
-            public void Return(IRpcConnection item)
-            {
-            }
 
             public void Dispose()
             {
@@ -312,21 +303,21 @@ namespace NRPC.Test
                 Dispose();
                 return ValueTask.CompletedTask;
             }
+
+            public Task<IRpcConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult<IRpcConnection>(new TestRpcConnection());
+            }
+
+            public void ReturnConnection(IRpcConnection connection)
+            {
+            }
         }
 
-        private class AsyncDisposableConnectionPool : IAsyncObjectPool<IRpcConnection>, IAsyncDisposable, IDisposable
+        private class AsyncDisposableConnectionManager : IConnectionManager<IRpcConnection>, IAsyncDisposable, IDisposable
         {
             public bool IsDisposed { get; private set; }
             public bool DisposeAsyncCalled { get; private set; }
-
-            public ValueTask<IRpcConnection> GetAsync(CancellationToken cancellationToken)
-            {
-                return ValueTask.FromResult<IRpcConnection>(new TestRpcConnection());
-            }
-
-            public void Return(IRpcConnection item)
-            {
-            }
 
             public ValueTask DisposeAsync()
             {
@@ -339,20 +330,20 @@ namespace NRPC.Test
             {
                 IsDisposed = true;
             }
+
+            public Task<IRpcConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult<IRpcConnection>(new TestRpcConnection());
+            }
+
+            public void ReturnConnection(IRpcConnection connection)
+            {
+            }
         }
 
-        private class FaultyDisposableConnectionPool : IAsyncObjectPool<IRpcConnection>, IDisposable
+        private class FaultyDisposableConnectionManager : IConnectionManager<IRpcConnection>, IDisposable
         {
             public bool IsDisposed { get; private set; }
-
-            public ValueTask<IRpcConnection> GetAsync(CancellationToken cancellationToken)
-            {
-                return ValueTask.FromResult<IRpcConnection>(new TestRpcConnection());
-            }
-
-            public void Return(IRpcConnection item)
-            {
-            }
 
             public void Dispose()
             {
@@ -365,20 +356,20 @@ namespace NRPC.Test
                 Dispose();
                 return ValueTask.CompletedTask;
             }
+
+            public Task<IRpcConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult<IRpcConnection>(new TestRpcConnection());
+            }
+
+            public void ReturnConnection(IRpcConnection connection)
+            {
+            }
         }
 
-        private class FaultyAsyncDisposableConnectionPool : IAsyncObjectPool<IRpcConnection>, IAsyncDisposable, IDisposable
+        private class FaultyAsyncDisposableConnectionManager : IConnectionManager<IRpcConnection>, IAsyncDisposable, IDisposable
         {
             public bool IsDisposed { get; private set; }
-
-            public ValueTask<IRpcConnection> GetAsync(CancellationToken cancellationToken)
-            {
-                return ValueTask.FromResult<IRpcConnection>(new TestRpcConnection());
-            }
-
-            public void Return(IRpcConnection item)
-            {
-            }
 
             public ValueTask DisposeAsync()
             {
@@ -389,6 +380,15 @@ namespace NRPC.Test
             public void Dispose()
             {
                 IsDisposed = true;
+            }
+
+            public Task<IRpcConnection> GetConnectionAsync(CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult<IRpcConnection>(new TestRpcConnection());
+            }
+
+            public void ReturnConnection(IRpcConnection connection)
+            {
             }
         }
     }
